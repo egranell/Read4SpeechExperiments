@@ -1,0 +1,5 @@
+/Volumes/Secondary/Workplace/AndroidStudio/Read4SpeechExperiments/app/build/intermediates/classes/debug
+/Volumes/Secondary/Workplace/AndroidStudio/Read4SpeechExperiments/app/build/intermediates/pre-dexed/debug/support-annotations-20.0.0-8dca73f2f3531d85d5458ee52114b0dd97f79547.jar
+/Volumes/Secondary/Workplace/AndroidStudio/Read4SpeechExperiments/app/build/intermediates/pre-dexed/debug/internal_impl-20.0.0-1290c01852bbf8c5e939b8a69f2a22e0d6499fbe.jar
+/Volumes/Secondary/Workplace/AndroidStudio/Read4SpeechExperiments/app/build/intermediates/pre-dexed/debug/classes-b8de2a525e3d75b4f0b63d44af794a72668536ae.jar
+/Volumes/Secondary/Workplace/AndroidStudio/Read4SpeechExperiments/app/build/intermediates/pre-dexed/debug/classes-65b3e3d8ae824c3110e36987fac4175597b18c2e.jar

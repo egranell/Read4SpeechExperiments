@@ -1,0 +1,100 @@
+Quiero saber dónde está el Parque Científico
+Sitúame el Centro de Control de Instalaciones
+Indícame el camino a la Biblioteca
+¿Dónde está la Zona de Raquetas?
+El Polideportivo
+Estoy buscando el Vestuario
+Quiero ir al Centro de Posgrado
+¿Cómo puedo llegar al Ágora?
+¿Cuál es el edificio de Estudiantes?
+Busco la Facultad de Ciencias Sociales
+Quiero ir a la Facultad de Humanas y Sociales
+¿Dónde está Sociales y Humanas?
+Muéstrame dónde está el Instituto de Cerámica
+Quisiera ir al Instituto Agustín Escardino
+Estoy buscando la Facultad de Jurídicas
+¿Cómo se llega a la Facultad de Ciencias Económicas?
+¿Dónde se encuentra la Facultad de Salud?
+Ciencias de la Salud
+Dime dónde está el edificio de investigación
+Muéstrame el camino al Rectorado
+Quiero saber dónde se sitúan los Servicios Centrales
+Escuela Superior de Experimentales
+Indícame cómo ir a la Escuela de Tecnología
+¿Sabes dónde hay un contenedor?
+Busco el contenedor de envases
+Muéstrame dónde está el contenedor de papel y cartón
+Sitúame el contenedor de vídrio
+Busco un aparcamiento de bicicletas
+¿Dónde hay un aparcamiento adaptado?
+Muéstrame las plazas de minúsválido de la Biblioteca
+Quiero ir a Servicios Generales
+¿Cómo puedo llegar al Consejo Social?
+Quiero saber el camino a la Residencia
+Estoy buscando la Escoleta
+Quisiera ir al centro de Posgrado
+Enséñame dónde está la biblioteca
+¿Cómo puedo ir a la biblioteca?
+Biblioteca
+Quiero ir a la galería Octubre
+¿Me dices dónde está la piscina?
+La piscina cubierta
+Quiero ir al Polideportivo
+Indícame dónde está el centro de salud
+Quiero ir al restaurante
+Búscame la pizzería
+Restaurante de Sociales
+El camino al restaurante de Ciencias Económicas
+Dime dónde está el bar de la Escuela de Ciencias Experimentales
+La cafetería de Rectorado
+¿Dónde está el café dels sentits?
+Busco Plácido Gómez
+La autoescuela
+Muéstrame el camino a la óptica
+Quiero ir a Bankia
+¿Dónde está la agencia de viajes?
+Sitúame el kiosco
+Banco Santander
+Quisiera saber dónde está el centro de documentación
+Estoy buscando la cátedra UNESCO
+¿Dónde se encuentra el espaitec?
+Quiero ir al laboratorio de comunicación audiovisual
+Muéstrame dónde queda la oficina de cooperación
+¿Dónde está la oficina de prácticas?
+Relaciones internacionales
+¿Dónde queda la oficina verde?
+¿Cómo puedo llegar al servicio de asistencia psicológica?
+¿Dónde está el servicio de instrumentación científica?
+Asuntos generales
+¿Dónde se encuentra el servicio de deportes?
+Indícame la situación de gestión económica
+Muéstrame el servicio de informática
+Recursos humanos
+¿Me dirías dónde está la unidad de soporte educativo?
+Estoy buscando la administración del departamento
+¿Dónde está el archivo?
+Busco un aula docente
+Quiero ir al aula de formación
+Muéstrame dónde está el seminario de la Facultad de Jurídicas
+Centro de documentación
+Dónde está la sala de estudio
+Sitúame el restaurante de Rectorado
+Quisiera ir a la sala de espera
+Quisiera saber dónde está el despacho de dirección
+Muéstrame el despacho de gestión
+Enséñame dónde está el despacho de investigación
+¿Dónde está la dirección?
+Quiero ir a la pista cubierta
+Busco el salón de actos
+Audiovisuales
+¿Dónde se encuentra la sala de grados de la Escuela de Experimentales?
+Quiero ir a la sala de juntas
+Busco la sala de profesores de Económicas
+¿Sabrías decirme dónde se encuentra el aula informática?
+Estoy buscando el laboratorio de investigación
+¿Dónde está el baño?
+Estoy buscando el aseo
+Muéstrame dónde está el almacén
+Quiero ir al ambulatorio
+¿Dónde está reprografía?
+Quiero encontrar el camino al aula taller
