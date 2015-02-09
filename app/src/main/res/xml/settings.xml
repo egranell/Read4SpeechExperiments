@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory android:title="Audio dir" >
+        <EditTextPreference
+            android:id="@+id/audioPath"
+            android:title="Recorded audio directory"
+            android:summary="Directory for the recorded audio files."
+            android:key="audioPath"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Mandatory sentences" >
+        <EditTextPreference 
+            android:id="@+id/mandatorySentences"
+              android:title="Mandatory sentences file"
+              android:summary="Absolute path to the file containing the mandatory sentences." 
+              android:key="mandatoryFile"/>
+         
+    </PreferenceCategory>
+    
+    <PreferenceCategory android:title="Optional sentences" >
+        <EditTextPreference 
+            android:id="@+id/optionalSentences"
+              android:title="Optional sentences file"
+              android:summary="Absolute path to the file containing the Optional sentences." 
+              android:key="optionalFile"/>
+        <EditTextPreference 
+            android:id="@+id/optionalSentencesNumber"
+              android:title="Optional sentences number"
+              android:summary="Optional sentences" 
+              android:key="OptionalFileNumber"
+              android:inputType="number"/>
+        
+    </PreferenceCategory>
+
+</PreferenceScreen>
