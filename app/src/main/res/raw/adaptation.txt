@@ -1,10 +1,10 @@
-Dime el camino a la biblioteca
-Estoy buscando la pizzeria Ágora
-Sitúame la Facultad de Ciencias Sociales y Humanas
-¿Dónde está el baño?
-Dime donde está el Consejo Social
-Indícame el camino a un aula docente
-El contenedor de vídrio
-Dime cómo llegar a la Escuela de Ciencias Experimentales
-Quiero llegar a la óptica
-¿Dónde hay un aparcamiento de minusválidos?
+WHERE IS THE PATH TO THE LIBRARY?
+I AM LOOKING THE AGORA PIZZERIA.
+SITUATE ME THE FACULTY OF HUMAN AND SOCIAL SCIENCES.
+WHERE IS THE TOILET?
+TELL ME WHERE IS THE SOCIAL COUNCIL.
+SHOW ME THE ROUTE TO GO TO A LECTURE ROOM.
+THE CONTAINER FOR GLASS.
+TELL ME HOW TO ARRIVE TO THE SCHOOL OF EXPERIMENTAL SCIENCES.
+I WANT TO GO TO THE OPTICAL SHOP.
+WHERE IS A HANDICAPPED PARKING SPACE?

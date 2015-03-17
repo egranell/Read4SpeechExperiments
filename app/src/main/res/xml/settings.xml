@@ -1,37 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="Audio dir" >
+    <PreferenceCategory android:title="Audio dir">
         <EditTextPreference
             android:id="@+id/audioPath"
-            android:title="Recorded audio directory"
+            android:key="audioPath"
             android:summary="Directory for the recorded audio files."
-            android:key="audioPath"/>
+            android:title="Recorded audio directory" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="Mandatory sentences" >
-        <EditTextPreference 
+    <PreferenceCategory android:title="Experiments state">
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="handsFree"
+            android:summary="Enabled permits to do the audio acquisition without user interaction"
+            android:title="Hands free" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="speaker"
+            android:summary="Driver/Passenger"
+            android:title="Speaker" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="engine"
+            android:summary="On/Off"
+            android:title="Engine" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="mic"
+            android:summary="External/Internal"
+            android:title="External mic" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="position"
+            android:summary="Up/Down"
+            android:title="Position" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Mandatory sentences">
+        <EditTextPreference
             android:id="@+id/mandatorySentences"
-              android:title="Mandatory sentences file"
-              android:summary="Absolute path to the file containing the mandatory sentences." 
-              android:key="mandatoryFile"/>
-         
+            android:key="mandatoryFile"
+            android:summary="Absolute path to the file containing the mandatory sentences."
+            android:title="Mandatory sentences file" />
+
     </PreferenceCategory>
-    
-    <PreferenceCategory android:title="Optional sentences" >
-        <EditTextPreference 
+
+    <PreferenceCategory android:title="Optional sentences">
+        <EditTextPreference
             android:id="@+id/optionalSentences"
-              android:title="Optional sentences file"
-              android:summary="Absolute path to the file containing the Optional sentences." 
-              android:key="optionalFile"/>
-        <EditTextPreference 
+            android:key="optionalFile"
+            android:summary="Absolute path to the file containing the Optional sentences."
+            android:title="Optional sentences file" />
+        <EditTextPreference
             android:id="@+id/optionalSentencesNumber"
-              android:title="Optional sentences number"
-              android:summary="Optional sentences" 
-              android:key="OptionalFileNumber"
-              android:inputType="number"/>
-        
+            android:inputType="number"
+            android:key="OptionalFileNumber"
+            android:summary="Optional sentences"
+            android:title="Optional sentences number" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

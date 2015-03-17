@@ -2,6 +2,7 @@ package com.aemus.Read4SpeechExperiments;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,9 +14,13 @@ import android.media.MediaRecorder.AudioSource;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
+import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -51,13 +56,11 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class MainActivity extends ActionBarActivity {
     private static final int RESULT_SETTINGS = 0;
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
-    private static String tag = "Read4Speech";
+    private static String tag = "Read4SpeechExperiments";
     private static ViewPager mViewPager;
     private static ArrayList<String> sentences;
     private static ArrayList<String> fileNames;
@@ -68,24 +71,19 @@ public class MainActivity extends ActionBarActivity {
     private static int recorderMinBufferSize = AudioRecord.getMinBufferSize(recorderSampleRate, recorderChannels, recorderEncoding);
     private static AudioRecord recorder;
     private static MediaPlayer player;
+    private static TextToSpeech tts;
 
     private static Boolean record = false;
     private static File rootDir;
+    private static File rootDir2; // Borrar
+    private static Context context;
     AlertDialog.Builder cleanDialog;
     AlertDialog.Builder thanksDialog;
     AlertDialog.Builder sendDialog;
     AlertDialog.Builder instructionsDialog;
     AlertDialog.Builder notSpaceDialog;
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a {@link FragmentPagerAdapter}
-     * derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
     SectionsPagerAdapter mSectionsPagerAdapter;
-    private String corpusName = "corpusName";
+    private String corpusName = "SmartWays";
     private String ID;
 
     protected static float getPercentDone() {
@@ -97,6 +95,7 @@ public class MainActivity extends ActionBarActivity {
         }
         return (float) (Math.round(percent * Math.pow(10, 3)) / Math.pow(10, 3)) * 100;
     }
+
 
     @SuppressLint("NewApi")
     protected static long getAvailableSpaceInKB() {
@@ -110,7 +109,6 @@ public class MainActivity extends ActionBarActivity {
         Thread streamThread = new Thread(new Runnable() {
             @Override
             public void run() {
-
                 int sizeAudio = 0;
                 RandomAccessFile cab;
                 byte[] buffer = new byte[recorderMinBufferSize];
@@ -135,7 +133,7 @@ public class MainActivity extends ActionBarActivity {
                         e.printStackTrace();
                     }
 
-                    // Escribir cabecera
+                    // Write WAV header
                     cab = new RandomAccessFile(rootDir + "/" + fileNames.get(position - 1) + ".cab", "rw");
                     cab.setLength(0);
                     cab.writeBytes("RIFF");
@@ -151,7 +149,6 @@ public class MainActivity extends ActionBarActivity {
                     cab.writeShort(Short.reverseBytes((short) 16));
                     cab.writeBytes("data");
                     cab.writeInt(Integer.reverseBytes(sizeAudio));
-
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -167,13 +164,16 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //showUserSettings();
-        init();
-        // Create the adapter that will return a fragment for each of the three
-        // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+        context = getApplicationContext();
+        tts = new TextToSpeech(context, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+            }
+        });
+        tts.setLanguage(new Locale("es", "ES"));
 
-        // Set up the ViewPager with the sections adapter.
+        init();
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
@@ -224,14 +224,12 @@ public class MainActivity extends ActionBarActivity {
         thanksDialog.setTitle("All files deleted.");
         thanksDialog.setIcon(R.drawable.ic_launcher);
         thanksDialog.setMessage("Thanks for your collaboration.");
-        //\nDo you want to do a new record or to close the application?");
         thanksDialog.setNegativeButton("New record", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 init();
                 mSectionsPagerAdapter.notifyDataSetChanged();
                 mViewPager.setCurrentItem(0);
-
                 ((PlaceholderFragment) mViewPager.getAdapter().instantiateItem(mViewPager, 0)).updateContent();
                 ((PlaceholderFragment) mViewPager.getAdapter().instantiateItem(mViewPager, 1)).updateContent();
             }
@@ -282,14 +280,12 @@ public class MainActivity extends ActionBarActivity {
     @SuppressLint("NewApi")
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         switch (item.getItemId()) {
             case R.id.clear:
                 cleanRecords();
@@ -313,32 +309,51 @@ public class MainActivity extends ActionBarActivity {
         SharedPreferences sharedPrefs = PreferenceManager
                 .getDefaultSharedPreferences(this);
         if (!new File(sharedPrefs.getString("mandatoryFile", "NULL")).exists()) {
-            Toast.makeText(getApplicationContext(), "To use this software it is necessary to define at least the mandatory sentences file to read.", Toast.LENGTH_LONG).show();
-            Intent i = new Intent(this, settings.class);
-            startActivityForResult(i, RESULT_SETTINGS);
+            Toast.makeText(getApplicationContext(), "To use this software it is necessary to define at least the mandatory sentences file to read.\nIt will be load 10 demo sentences.", Toast.LENGTH_LONG).show();
         }
 
-
-        rootDir = new File(Environment.getExternalStorageDirectory().getPath() + "/Read4SpeechExperiments/" +sharedPrefs.getString("audioPath", "NULL"));
+        rootDir = new File(Environment.getExternalStorageDirectory().getPath() + "/Read4SpeechExperiments/" +
+                sharedPrefs.getString("audioPath", "NULL") + "/" +
+                (sharedPrefs.getBoolean("speaker", false) ? "Driver" : "Passenger") + "_" +
+                (sharedPrefs.getBoolean("mic", false) ? "Mic" : "Phone") + "_" +
+                (sharedPrefs.getBoolean("engine", false) ? "On" : "Off") + "_" +
+                (sharedPrefs.getBoolean("position", false) ? "Up" : "Down"));
         ID = Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID);
-        if (new File(sharedPrefs.getString("mandatoryFile", "NULL")).exists()) {
-            loadLines(sharedPrefs.getString("mandatoryFile", "NULL"), sharedPrefs.getString("optionalFile", "NULL"), Integer.valueOf(sharedPrefs.getString("OptionalFileNumber", "0")));
-            // Comprobar si existe suficiente espacio en la SD (unos 300KB por frase)
-            Long spaceAvailable = getAvailableSpaceInKB();
-            Long spaceNecessary = (long) sentences.size() * 300;
-            if (spaceAvailable < spaceNecessary) {
-                notSpaceDialog.setMessage("There is not enough free space to record all sentences.\nPlease free at least " + (spaceNecessary / 1024 + 1) + " MB before using this application.");
-                notSpaceDialog.show();
-            }
+        loadLines(sharedPrefs.getString("mandatoryFile", ""), sharedPrefs.getString("optionalFile", ""), Integer.valueOf(sharedPrefs.getString("OptionalFileNumber", "0")));
+        //Check if there is enough space on the SD (about 300KB per phrase)
+        Long spaceAvailable = getAvailableSpaceInKB();
+        Long spaceNecessary = (long) sentences.size() * 300;
+        if (spaceAvailable < spaceNecessary) {
+            notSpaceDialog.setMessage("There is not enough free space to record all sentences.\nPlease free at least " + (spaceNecessary / 1024 + 1) + " MB before using this application.");
+            notSpaceDialog.show();
         }
-        // Crear el directorio que contendr� todos los ficheros
         if (!rootDir.exists()) {
-            if (! rootDir.mkdirs()) {
+            if (!rootDir.mkdirs()) {
                 Log.e(tag, "Cannot create directory: " + rootDir);
             }
         }
         if (!new File(rootDir + "/" + corpusName + "_transcripts_" + ID + ".txt").exists())
             writeToFile(fileNames, sentences);
+
+        // Borrar esto
+        rootDir2 = new File(Environment.getExternalStorageDirectory().getPath() + "/Read4SpeechExperiments/" +
+                sharedPrefs.getString("audioPath", "NULL") + "/" +
+                (!sharedPrefs.getBoolean("speaker", false) ? "Driver" : "Passenger") + "_" +
+                (sharedPrefs.getBoolean("mic", false) ? "Mic" : "Phone") + "_" +
+                (sharedPrefs.getBoolean("engine", false) ? "On" : "Off") + "_" +
+                (sharedPrefs.getBoolean("position", false) ? "Up" : "Down"));
+
+        loadLines(sharedPrefs.getString("mandatoryFile", ""), sharedPrefs.getString("optionalFile", ""), Integer.valueOf(sharedPrefs.getString("OptionalFileNumber", "0")));
+        //Check if there is enough space on the SD (about 300KB per phrase)
+
+        if (!rootDir2.exists()) {
+            if (!rootDir2.mkdirs()) {
+                Log.e(tag, "Cannot create directory: " + rootDir2);
+            }
+        }
+        if (!new File(rootDir2 + "/" + corpusName + "_transcripts_" + ID + ".txt").exists())
+            writeToFile(fileNames, sentences);
+        // Borrar esto
     }
 
     protected void loadLines(String mandatoryFile, String optionalFile, int optionalSentences) {
@@ -347,8 +362,11 @@ public class MainActivity extends ActionBarActivity {
         File file = new File(rootDir + "/" + corpusName + "_transcripts_" + ID + ".txt");
         if (!file.exists()) {
             try {
-                BufferedReader br = new BufferedReader(new FileReader(mandatoryFile));
-
+                BufferedReader br;
+                if (!mandatoryFile.matches("/") && new File(mandatoryFile).exists())
+                    br = new BufferedReader(new FileReader(mandatoryFile));
+                else
+                    br = new BufferedReader(new InputStreamReader(getResources().openRawResource(R.raw.adaptation)));
                 try {
                     String line;
 
@@ -377,7 +395,6 @@ public class MainActivity extends ActionBarActivity {
                 }
                 try {
                     String line;
-
                     int l = 0;
                     while ((line = br.readLine()) != null) {
                         l++;
@@ -386,14 +403,12 @@ public class MainActivity extends ActionBarActivity {
                             fileNames.add(corpusName + "_test_" + String.format("%02d", l) + "_" + Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID));
                         }
                     }
-
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             } catch (FileNotFoundException e1) {
                 e1.printStackTrace();
             }
-
         } else {
             try {
                 InputStream fis = new FileInputStream(file);
@@ -505,17 +520,17 @@ public class MainActivity extends ActionBarActivity {
             case RESULT_SETTINGS:
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-                // Comprobar si existen los ficheros de texto, y en el caso de que el obligatorio ono exista, volver a cargar las preferencias
+                // Check for text files, and if there is not a mandatory file load the demo sentences.
 
-                File mandatoryFile = new File(sharedPrefs.getString("mandatoryFile", "NULL"));
-                if (!mandatoryFile.exists()) {
+                File mandatoryFile = new File(sharedPrefs.getString("mandatoryFile", ""));
+                if (!mandatoryFile.exists() && mandatoryFile.getAbsolutePath().matches("/")) {
                     Toast.makeText(getApplicationContext(), "The mandatory sentences file: " + mandatoryFile.getAbsolutePath() + " doesn't exist.", Toast.LENGTH_LONG).show();
                     Intent i = new Intent(this, settings.class);
                     startActivityForResult(i, RESULT_SETTINGS);
                 }
 
-                File optionalFile = new File(sharedPrefs.getString("optionalFile", "NULL"));
-                if (!optionalFile.exists()) {
+                File optionalFile = new File(sharedPrefs.getString("optionalFile", ""));
+                if (!optionalFile.exists() && optionalFile.getAbsolutePath().matches("/")) {
                     Toast.makeText(getApplicationContext(), "The optional sentences file: " + optionalFile.getAbsolutePath() + " doesn't exist.", Toast.LENGTH_LONG).show();
                 }
                 File file = new File(rootDir + "/" + corpusName + "_transcripts_" + ID + ".txt");
@@ -524,47 +539,71 @@ public class MainActivity extends ActionBarActivity {
                         Log.e(tag, "Cannot delete file: " + file);
                     }
                 }
-                if (mandatoryFile.exists()) {
-                    init();
-                    mSectionsPagerAdapter.notifyDataSetChanged();
-                    int index = mViewPager.getCurrentItem();
 
-                    if(index >0) ((PlaceholderFragment) mViewPager.getAdapter().instantiateItem(mViewPager, index - 1)).updateContent();
-                    ((PlaceholderFragment) mViewPager.getAdapter().instantiateItem(mViewPager, index)).updateContent();
-                    if(index < sentences.size()-1) ((PlaceholderFragment) mViewPager.getAdapter().instantiateItem(mViewPager, index + 1)).updateContent();
-                }
+                init();
+
+                mSectionsPagerAdapter.notifyDataSetChanged();
+                int index = mViewPager.getCurrentItem();
+
+                if (index > 0)
+                    ((PlaceholderFragment) mViewPager.getAdapter().instantiateItem(mViewPager, index - 1)).updateContent();
+                ((PlaceholderFragment) mViewPager.getAdapter().instantiateItem(mViewPager, index)).updateContent();
+                if (index < sentences.size() - 1)
+                    ((PlaceholderFragment) mViewPager.getAdapter().instantiateItem(mViewPager, index + 1)).updateContent();
                 break;
         }
-
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
     public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
         private static final String ARG_SENTENCE_NUMBER = "sentence_number";
+        private static final String ARG_SENTENCE = "sentence";
         private static final String ARG_RECORDING = "recording";
+        private static final String ARG_HANDFREE_RECORDING = "handFreeRecording";
         private static final String ARG_PLAYING = "playing";
+        public final Handler handler;
         TextView sentenceNumber;
         TextView progress;
+        TextView sentence;
+        ImageButton recButton;
+        ImageButton playButton;
         ProgressBar progressBar;
 
         public PlaceholderFragment() {
+            handler = new Handler() {
+
+                // Create handleMessage function
+
+                public void handleMessage(Message msg) {
+
+                    String aResponse = msg.getData().getString("message");
+                    int s = msg.getData().getInt("sentence");
+                    int m = msg.getData().getInt("move");
+
+                    if ((null != aResponse)) {
+                        if (aResponse.matches("start recording") || aResponse.matches("stop recording"))
+                            recButton.performClick();
+                        else if (aResponse.matches("next sentence") || aResponse.matches("finish")) {
+                            getArguments().putInt(ARG_SENTENCE_NUMBER, s + 1);
+                            getArguments().putString(ARG_SENTENCE, sentences.get(s));
+                            updateContent();
+                            if (m != s) {
+                                mViewPager.setCurrentItem(m);
+                                mViewPager.getAdapter().startUpdate(mViewPager);
+                                mViewPager.getAdapter().finishUpdate(mViewPager);
+                            }
+                        }
+                    }
+                }
+            };
         }
 
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
         public static PlaceholderFragment newInstance(int sectionNumber) {
             PlaceholderFragment fragment = new PlaceholderFragment();
             Bundle args = new Bundle();
             args.putInt(ARG_SENTENCE_NUMBER, sectionNumber);
+            args.putString(ARG_SENTENCE, sentences.get(sectionNumber - 1));
             args.putBoolean(ARG_RECORDING, false);
+            args.putBoolean(ARG_HANDFREE_RECORDING, false);
             args.putBoolean(ARG_PLAYING, false);
             fragment.setArguments(args);
             return fragment;
@@ -575,9 +614,9 @@ public class MainActivity extends ActionBarActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
             sentenceNumber = (TextView) rootView.findViewById(R.id.sentenceNumber);
-            final TextView sentence = (TextView) rootView.findViewById(R.id.sentence);
-            final ImageButton recButton = (ImageButton) rootView.findViewById(R.id.rec_button);
-            final ImageButton playButton = (ImageButton) rootView.findViewById(R.id.play_button);
+            sentence = (TextView) rootView.findViewById(R.id.sentence);
+            recButton = (ImageButton) rootView.findViewById(R.id.rec_button);
+            playButton = (ImageButton) rootView.findViewById(R.id.play_button);
             progress = (TextView) rootView.findViewById(R.id.progress);
             progressBar = (ProgressBar) rootView.findViewById(R.id.progressBar1);
             progressBar.setMax(100);
@@ -589,8 +628,12 @@ public class MainActivity extends ActionBarActivity {
             sentence.setText(sentences.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1));
             sentence.setOnClickListener(new OnClickListener() {
                 public void onClick(View arg0) {
-                    if (getArguments().getBoolean(ARG_RECORDING)) {
-                        recButton.performClick();
+                    getArguments().putBoolean(ARG_HANDFREE_RECORDING, false);
+                    if (!PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("handsFree", false)) {
+                        if (getArguments().getBoolean(ARG_RECORDING)) {
+                            recButton.performClick();
+                        }
+
                     }
                     if (getArguments().getBoolean(ARG_PLAYING)) {
                         playButton.performClick();
@@ -652,17 +695,24 @@ public class MainActivity extends ActionBarActivity {
                             ((PlaceholderFragment) mViewPager.getAdapter().instantiateItem(mViewPager, index + 1)).updateContent();
 
                     } else {
-                        if (new File(rootDir + "/" + fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1) + ".raw").exists()) {
-                            recDialog.show();
+                        if (PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("handsFree", false)
+                                && !getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
+                            getArguments().putBoolean(ARG_HANDFREE_RECORDING, true);
+                            handsFreeMode();
                         } else {
-                            record = true;
-                            playButton.setEnabled(false);
-                            getArguments().putBoolean(ARG_RECORDING, true);
-                            sentence.setBackgroundResource(R.color.recording);
-                            recButton.setBackgroundResource(R.drawable.record_stop);
-                            recorder = new AudioRecord(AudioSource.MIC, recorderSampleRate, recorderChannels, recorderEncoding, recorderMinBufferSize * 10);
-                            recorder.startRecording();
-                            startRecording(getArguments().getInt(ARG_SENTENCE_NUMBER));
+                            if (new File(rootDir + "/" + fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1) + ".raw").exists()
+                                    && !getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
+                                recDialog.show();
+                            } else {
+                                record = true;
+                                playButton.setEnabled(false);
+                                getArguments().putBoolean(ARG_RECORDING, true);
+                                sentence.setBackgroundResource(R.color.recording);
+                                recButton.setBackgroundResource(R.drawable.record_stop);
+                                recorder = new AudioRecord(AudioSource.MIC, recorderSampleRate, recorderChannels, recorderEncoding, recorderMinBufferSize * 10);
+                                recorder.startRecording();
+                                startRecording(getArguments().getInt(ARG_SENTENCE_NUMBER));
+                            }
                         }
                     }
                 }
@@ -681,14 +731,16 @@ public class MainActivity extends ActionBarActivity {
                             public void onCompletion(MediaPlayer mp) {
                                 getArguments().putBoolean(ARG_PLAYING, false);
                                 playButton.setBackgroundResource(R.drawable.play);
-                                player.release();
-                                player = null;
+                                if (player != null) {
+                                    player.release();
+                                    player = null;
+                                }
                                 recButton.setEnabled(true);
                             }
                         });
                         String fileName = rootDir + "/" + fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1);
                         try {
-                            // Unir cabecera y fichero raw = wav
+                            // Concatenate WAV header with RAW file to obtain the WAV file.
                             File cab = new File(fileName + ".cab");
                             File raw = new File(fileName + ".raw");
 
@@ -744,8 +796,10 @@ public class MainActivity extends ActionBarActivity {
                         getArguments().putBoolean(ARG_PLAYING, false);
                         playButton.setBackgroundResource(R.drawable.play);
                         recButton.setEnabled(true);
-                        player.release();
-                        player = null;
+                        if (player != null) {
+                            player.release();
+                            player = null;
+                        }
                     }
                 }
 
@@ -767,26 +821,119 @@ public class MainActivity extends ActionBarActivity {
         }
 
         public void updateContent() {
+            if (getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
+                sentence.setBackgroundColor(R.color.black_overlay);
+                playButton.setEnabled(false);
+            } else if (new File(rootDir + "/" + fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1) + ".raw").exists()) {
+                sentence.setBackgroundResource(R.color.recorded);
+                playButton.setEnabled(true);
+            } else {
+                sentence.setBackgroundResource(R.color.notRecorded);
+                playButton.setEnabled(false);
+            }
+            sentence.setText(getArguments().getString(ARG_SENTENCE));
             progressBar.setProgress((int) getPercentDone());
             progress.setText(String.format("%.2f", getPercentDone()) + "%");
             sentenceNumber.setText(getResources().getString(R.string.sentence) + " " + Integer.toString(getArguments().getInt(ARG_SENTENCE_NUMBER)) + "/" + sentences.size());
         }
+
+        public void handsFreeMode() {
+            playButton.setEnabled(false);
+            sentence.setBackgroundColor(R.color.black_overlay);
+            new Thread(new Runnable() {
+                public void run() {
+                    Looper.prepare();
+                    int init = mViewPager.getCurrentItem();
+                    File rootDir1BK = rootDir;
+                    File rootDir2BK = rootDir2;
+                    Boolean driver = false;
+                    for (int i = init; i < sentences.size(); i++) {
+
+                        if (getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
+                            tts.speak(sentences.get(i), TextToSpeech.QUEUE_FLUSH, null);
+                            long startTime = System.currentTimeMillis();
+                            while ((System.currentTimeMillis() - startTime) < 1000) {
+                            }
+                            while (tts.isSpeaking()) {
+                            }
+                        } else {
+                            i--;
+                        }
+                        if (getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        if (getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
+                            Message msgObj = new Message();
+                            Bundle b = new Bundle();
+                            b.putString("message", "start recording");
+                            msgObj.setData(b);
+                            handler.sendMessage(msgObj);
+                        }
+                        try {
+                            if (getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
+                                Thread.sleep(10000);
+                                Message msgObj = new Message();
+                                Bundle b = new Bundle();
+                                b.putString("message", "stop recording");
+                                msgObj.setData(b);
+                                handler.sendMessage(msgObj);
+                            }
+
+                            if (driver)
+                                rootDir = rootDir1BK;
+                            else {
+                                i--;
+                                rootDir = rootDir2BK;
+                            }
+
+                            if (driver) {
+                                if (i + 1 < sentences.size() && getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
+                                    try {
+                                        Thread.sleep(1000);
+                                        Message msgObj = new Message();
+                                        Bundle b = new Bundle();
+                                        b.putString("message", "next sentence");
+                                        b.putInt("sentence", i + 1);
+                                        b.putInt("move", i + 1);
+                                        msgObj.setData(b);
+                                        handler.sendMessage(msgObj);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                } else {
+                                    Message msgObj = new Message();
+                                    Bundle b = new Bundle();
+                                    b.putString("message", "finish");
+                                    b.putInt("sentence", init);
+                                    b.putInt("move", i);
+                                    msgObj.setData(b);
+                                    handler.sendMessage(msgObj);
+                                    Log.e("move", init + " - " + i);
+                                    if (!getArguments().getBoolean(ARG_HANDFREE_RECORDING)) break;
+                                }
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        driver = !driver;
+                    }
+                    getArguments().putBoolean(ARG_HANDFREE_RECORDING, false);
+                }
+            }).start();
+        }
     }
 
-    /**
-     * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
-     * one of the sections/tabs/pages.
-     */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
-
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
         @Override
         public Fragment getItem(int position) {
-            // getItem is called to instantiate the fragment for the given page.
-            // Return a PlaceholderFragment (defined as a static inner class below).
             return PlaceholderFragment.newInstance(position + 1);
         }
 
@@ -795,5 +942,4 @@ public class MainActivity extends ActionBarActivity {
             return sentences.size();
         }
     }
-
 }
