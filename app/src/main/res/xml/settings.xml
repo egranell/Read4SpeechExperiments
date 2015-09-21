@@ -1,48 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="Audio dir">
+    <PreferenceCategory android:title="General Settings">
         <EditTextPreference
             android:id="@+id/audioPath"
             android:key="audioPath"
             android:summary="Directory for the recorded audio files."
             android:title="Recorded audio directory" />
 
-    </PreferenceCategory>
-
-    <PreferenceCategory android:title="Experiments state">
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="handsFree"
-            android:summary="Enabled permits to do the audio acquisition without user interaction"
-            android:title="Hands free" />
-
-        <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="speaker"
-            android:summary="Driver/Passenger"
-            android:title="Speaker" />
+        <EditTextPreference
+            android:id="@+id/name"
+            android:key="name"
+            android:summary="The name of the speaker."
+            android:title="Speaker name" />
 
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="engine"
-            android:summary="On/Off"
-            android:title="Engine" />
+            android:key="images"
+            android:summary="Show the text line images to read if available."
+            android:title="Show images" />
+    <!---<CheckBoxPreference
+        android:defaultValue="false"
+        android:key="handsFree"
+        android:summary="Permits to acquire the audio without user interaction"
+        android:title="Hands free" /> -->
+</PreferenceCategory>
 
-        <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="mic"
-            android:summary="External/Internal"
-            android:title="External mic" />
+<!---<PreferenceCategory android:title="Experiments state">
 
-        <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="position"
-            android:summary="Up/Down"
-            android:title="Position" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="handsFree"
+        android:summary="Enabled permits to do the audio acquisition without user interaction"
+        android:title="Hands free" />
 
-    </PreferenceCategory>
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="speaker"
+        android:summary="Driver/Passenger"
+        android:title="Speaker" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="engine"
+        android:summary="On/Off"
+        android:title="Engine" />
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="mic"
+        android:summary="External/Internal"
+        android:title="External mic" />
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="position"
+        android:summary="Up/Down"
+        android:title="Position" />
+
+</PreferenceCategory> -->
 
     <PreferenceCategory android:title="Mandatory sentences">
         <EditTextPreference

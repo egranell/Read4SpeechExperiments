@@ -17,14 +17,13 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 import android.speech.tts.TextToSpeech;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Html;
 import android.util.Log;
@@ -32,6 +31,7 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -39,7 +39,9 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -61,7 +63,7 @@ import java.util.Locale;
 public class MainActivity extends ActionBarActivity {
     private static final int RESULT_SETTINGS = 0;
     private static String tag = "Read4SpeechExperiments";
-    private static ViewPager mViewPager;
+    private static CustomViewPager mViewPager;
     private static ArrayList<String> sentences;
     private static ArrayList<String> fileNames;
 
@@ -75,7 +77,6 @@ public class MainActivity extends ActionBarActivity {
 
     private static Boolean record = false;
     private static File rootDir;
-    private static File rootDir2; // Borrar
     private static Context context;
     AlertDialog.Builder cleanDialog;
     AlertDialog.Builder thanksDialog;
@@ -83,7 +84,7 @@ public class MainActivity extends ActionBarActivity {
     AlertDialog.Builder instructionsDialog;
     AlertDialog.Builder notSpaceDialog;
     SectionsPagerAdapter mSectionsPagerAdapter;
-    private String corpusName = "SmartWays";
+    private String name = "Combination";
     private String ID;
 
     protected static float getPercentDone() {
@@ -96,13 +97,8 @@ public class MainActivity extends ActionBarActivity {
         return (float) (Math.round(percent * Math.pow(10, 3)) / Math.pow(10, 3)) * 100;
     }
 
-
-    @SuppressLint("NewApi")
     protected static long getAvailableSpaceInKB() {
-        final long SIZE_KB = 1024L;
-        StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
-        long availableSpace = stat.getAvailableBlocksLong() * stat.getBlockSizeLong();
-        return availableSpace / SIZE_KB;
+        return Environment.getExternalStorageDirectory().getFreeSpace() / 1024L;
     }
 
     public static void startRecording(final int position) {
@@ -163,8 +159,10 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // this.requestWindowFeature(Window.FEATURE_NO_TITLE); // Si quito la barra no se muestra el menú
         setContentView(R.layout.activity_main);
         context = getApplicationContext();
+
         tts = new TextToSpeech(context, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
@@ -174,7 +172,7 @@ public class MainActivity extends ActionBarActivity {
 
         init();
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-        mViewPager = (ViewPager) findViewById(R.id.pager);
+        mViewPager = (CustomViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
         sendDialog = new AlertDialog.Builder(this);
@@ -201,6 +199,11 @@ public class MainActivity extends ActionBarActivity {
         cleanDialog.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString("name", "");
+                editor.commit();
+
                 if (rootDir.exists()) {
                     for (File f : rootDir.listFiles()) {
                         if (!f.delete()) {
@@ -306,20 +309,19 @@ public class MainActivity extends ActionBarActivity {
     }
 
     void init() {
-        SharedPreferences sharedPrefs = PreferenceManager
-                .getDefaultSharedPreferences(this);
-        if (!new File(sharedPrefs.getString("mandatoryFile", "NULL")).exists()) {
-            Toast.makeText(getApplicationContext(), "To use this software it is necessary to define at least the mandatory sentences file to read.\nIt will be load 10 demo sentences.", Toast.LENGTH_LONG).show();
-        }
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+        /*if (!new File(settings.getString("mandatoryFile", "NULL")).exists()) {
+            Toast.makeText(getApplicationContext(), "To use this software it is necessary to define at least the mandatory sentences file to read.\nIt will load the demo sentences.", Toast.LENGTH_LONG).show();
+        }*/
 
+        if (settings.getString("name", "").matches("")) {
+            Toast.makeText(getApplicationContext(), "Please set the name of the speaker.", Toast.LENGTH_LONG).show();
+        }
         rootDir = new File(Environment.getExternalStorageDirectory().getPath() + "/Read4SpeechExperiments/" +
-                sharedPrefs.getString("audioPath", "NULL") + "/" +
-                (sharedPrefs.getBoolean("speaker", false) ? "Driver" : "Passenger") + "_" +
-                (sharedPrefs.getBoolean("mic", false) ? "Mic" : "Phone") + "_" +
-                (sharedPrefs.getBoolean("engine", false) ? "On" : "Off") + "_" +
-                (sharedPrefs.getBoolean("position", false) ? "Up" : "Down"));
+                settings.getString("audioPath", ""));
+        name = settings.getString("name", "");
         ID = Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID);
-        loadLines(sharedPrefs.getString("mandatoryFile", ""), sharedPrefs.getString("optionalFile", ""), Integer.valueOf(sharedPrefs.getString("OptionalFileNumber", "0")));
+        loadLines(settings.getString("mandatoryFile", ""), settings.getString("optionalFile", ""), Integer.valueOf(settings.getString("OptionalFileNumber", "0")));
         //Check if there is enough space on the SD (about 300KB per phrase)
         Long spaceAvailable = getAvailableSpaceInKB();
         Long spaceNecessary = (long) sentences.size() * 300;
@@ -332,41 +334,21 @@ public class MainActivity extends ActionBarActivity {
                 Log.e(tag, "Cannot create directory: " + rootDir);
             }
         }
-        if (!new File(rootDir + "/" + corpusName + "_transcripts_" + ID + ".txt").exists())
+        if (!new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt").exists())
             writeToFile(fileNames, sentences);
-
-        // Borrar esto
-        rootDir2 = new File(Environment.getExternalStorageDirectory().getPath() + "/Read4SpeechExperiments/" +
-                sharedPrefs.getString("audioPath", "NULL") + "/" +
-                (!sharedPrefs.getBoolean("speaker", false) ? "Driver" : "Passenger") + "_" +
-                (sharedPrefs.getBoolean("mic", false) ? "Mic" : "Phone") + "_" +
-                (sharedPrefs.getBoolean("engine", false) ? "On" : "Off") + "_" +
-                (sharedPrefs.getBoolean("position", false) ? "Up" : "Down"));
-
-        loadLines(sharedPrefs.getString("mandatoryFile", ""), sharedPrefs.getString("optionalFile", ""), Integer.valueOf(sharedPrefs.getString("OptionalFileNumber", "0")));
-        //Check if there is enough space on the SD (about 300KB per phrase)
-
-        if (!rootDir2.exists()) {
-            if (!rootDir2.mkdirs()) {
-                Log.e(tag, "Cannot create directory: " + rootDir2);
-            }
-        }
-        if (!new File(rootDir2 + "/" + corpusName + "_transcripts_" + ID + ".txt").exists())
-            writeToFile(fileNames, sentences);
-        // Borrar esto
     }
 
     protected void loadLines(String mandatoryFile, String optionalFile, int optionalSentences) {
         sentences = new ArrayList<String>();
         fileNames = new ArrayList<String>();
-        File file = new File(rootDir + "/" + corpusName + "_transcripts_" + ID + ".txt");
+        File file = new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt");
         if (!file.exists()) {
             try {
                 BufferedReader br;
                 if (!mandatoryFile.matches("/") && new File(mandatoryFile).exists())
                     br = new BufferedReader(new FileReader(mandatoryFile));
                 else
-                    br = new BufferedReader(new InputStreamReader(getResources().openRawResource(R.raw.adaptation)));
+                    br = new BufferedReader(new InputStreamReader(getResources().openRawResource(R.raw.ref5xxup)));
                 try {
                     String line;
 
@@ -374,7 +356,7 @@ public class MainActivity extends ActionBarActivity {
                     while ((line = br.readLine()) != null) {
                         l++;
                         sentences.add(line);
-                        fileNames.add(corpusName + "_adap_" + String.format("%02d", l) + "_" + Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID));
+                        fileNames.add(name + "_" + Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID) + "_" + String.format("%02d", l));
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -400,7 +382,7 @@ public class MainActivity extends ActionBarActivity {
                         l++;
                         if (numbers.contains(l)) {
                             sentences.add(line);
-                            fileNames.add(corpusName + "_test_" + String.format("%02d", l) + "_" + Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID));
+                            fileNames.add(name + "_test_" + String.format("%02d", l) + "_" + Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID));
                         }
                     }
                 } catch (IOException e) {
@@ -430,7 +412,7 @@ public class MainActivity extends ActionBarActivity {
 
     private void writeToFile(ArrayList<String> fileName, ArrayList<String> line) {
         try {
-            File file = new File(rootDir + "/" + corpusName + "_transcripts_" + ID + ".txt");
+            File file = new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt");
             FileOutputStream fos = new FileOutputStream(file);
             PrintStream ps = new PrintStream(fos);
             // if file doesn't exists, then create it
@@ -495,11 +477,19 @@ public class MainActivity extends ActionBarActivity {
                 sendDialog.show();
             } else {
                 Intent itSend = new Intent();
-                itSend.setType("*/*");
+                //itSend.setType("*/*");
+                itSend.setType("plain/text");
                 itSend.setAction(android.content.Intent.ACTION_SEND_MULTIPLE);
+
+                itSend.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"speech4experiments@gmail.com"});
+                itSend.putExtra(android.content.Intent.EXTRA_SUBJECT, "[Read4SpeechExperiments] Acquisition for Rodrigo from " + name +
+                        " with " + android.os.Build.MODEL + " " + android.os.Build.VERSION.RELEASE);
+                itSend.putExtra(android.content.Intent.EXTRA_TEXT, "These are the records!\n\n" + name);
+
                 ArrayList<Uri> uris = new ArrayList<Uri>();
-                if (new File(rootDir + "/" + corpusName + "_transcripts_" + ID + ".txt").exists()) {
-                    uris.add(Uri.fromFile(new File(rootDir + "/" + corpusName + "_transcripts_" + ID + ".txt")));
+                uris.add(Uri.parse("mailto:speech4experiments@gmail.com"));
+                if (new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt").exists()) {
+                    uris.add(Uri.fromFile(new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt")));
                 }
                 for (int i = 0; i < sentences.size(); i++) {
                     if (new File(rootDir + "/" + fileNames.get(i) + ".raw").exists()) {
@@ -518,22 +508,27 @@ public class MainActivity extends ActionBarActivity {
 
         switch (requestCode) {
             case RESULT_SETTINGS:
-                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+                SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 
                 // Check for text files, and if there is not a mandatory file load the demo sentences.
-
-                File mandatoryFile = new File(sharedPrefs.getString("mandatoryFile", ""));
-                if (!mandatoryFile.exists() && mandatoryFile.getAbsolutePath().matches("/")) {
+                File mandatoryFile = new File(settings.getString("mandatoryFile", ""));
+                /*if (!mandatoryFile.exists() && mandatoryFile.getAbsolutePath().matches("/")) {
                     Toast.makeText(getApplicationContext(), "The mandatory sentences file: " + mandatoryFile.getAbsolutePath() + " doesn't exist.", Toast.LENGTH_LONG).show();
+                    Intent i = new Intent(this, settings.class);
+                    startActivityForResult(i, RESULT_SETTINGS);
+                }*/
+
+                if (settings.getString("name", null) == null) {
+                    Toast.makeText(getApplicationContext(), "Please set the name of the speaker.", Toast.LENGTH_LONG).show();
                     Intent i = new Intent(this, settings.class);
                     startActivityForResult(i, RESULT_SETTINGS);
                 }
 
-                File optionalFile = new File(sharedPrefs.getString("optionalFile", ""));
+                File optionalFile = new File(settings.getString("optionalFile", ""));
                 if (!optionalFile.exists() && optionalFile.getAbsolutePath().matches("/")) {
-                    Toast.makeText(getApplicationContext(), "The optional sentences file: " + optionalFile.getAbsolutePath() + " doesn't exist.", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(getApplicationContext(), "The optional sentences file: " + optionalFile.getAbsolutePath() + " doesn't exist.", Toast.LENGTH_LONG).show();
                 }
-                File file = new File(rootDir + "/" + corpusName + "_transcripts_" + ID + ".txt");
+                File file = new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt");
                 if (file.exists()) {
                     if (!file.delete()) {
                         Log.e(tag, "Cannot delete file: " + file);
@@ -544,7 +539,6 @@ public class MainActivity extends ActionBarActivity {
 
                 mSectionsPagerAdapter.notifyDataSetChanged();
                 int index = mViewPager.getCurrentItem();
-
                 if (index > 0)
                     ((PlaceholderFragment) mViewPager.getAdapter().instantiateItem(mViewPager, index - 1)).updateContent();
                 ((PlaceholderFragment) mViewPager.getAdapter().instantiateItem(mViewPager, index)).updateContent();
@@ -564,6 +558,7 @@ public class MainActivity extends ActionBarActivity {
         TextView sentenceNumber;
         TextView progress;
         TextView sentence;
+        ImageView imageSentence;
         ImageButton recButton;
         ImageButton playButton;
         ProgressBar progressBar;
@@ -572,13 +567,10 @@ public class MainActivity extends ActionBarActivity {
             handler = new Handler() {
 
                 // Create handleMessage function
-
                 public void handleMessage(Message msg) {
-
                     String aResponse = msg.getData().getString("message");
                     int s = msg.getData().getInt("sentence");
                     int m = msg.getData().getInt("move");
-
                     if ((null != aResponse)) {
                         if (aResponse.matches("start recording") || aResponse.matches("stop recording"))
                             recButton.performClick();
@@ -606,6 +598,7 @@ public class MainActivity extends ActionBarActivity {
             args.putBoolean(ARG_HANDFREE_RECORDING, false);
             args.putBoolean(ARG_PLAYING, false);
             fragment.setArguments(args);
+
             return fragment;
         }
 
@@ -613,8 +606,20 @@ public class MainActivity extends ActionBarActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+            RelativeLayout layout = (RelativeLayout) rootView.findViewById(R.id.fragmentLayout);
+            layout.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    Log.v(null, "TOUCH EVENT");
+                    return false;
+                }
+            });
+
+            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
+
             sentenceNumber = (TextView) rootView.findViewById(R.id.sentenceNumber);
             sentence = (TextView) rootView.findViewById(R.id.sentence);
+            imageSentence = (ImageView) rootView.findViewById(R.id.imageSentence);
             recButton = (ImageButton) rootView.findViewById(R.id.rec_button);
             playButton = (ImageButton) rootView.findViewById(R.id.play_button);
             progress = (TextView) rootView.findViewById(R.id.progress);
@@ -623,7 +628,6 @@ public class MainActivity extends ActionBarActivity {
             progressBar.setProgressDrawable(getResources().getDrawable(R.drawable.progressbar));
             progressBar.setProgress((int) getPercentDone());
             progress.setText(String.format("%.2f", getPercentDone()) + "%");
-
             sentenceNumber.setText(getResources().getString(R.string.sentence) + " " + Integer.toString(getArguments().getInt(ARG_SENTENCE_NUMBER)) + "/" + sentences.size());
             sentence.setText(sentences.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1));
             sentence.setOnClickListener(new OnClickListener() {
@@ -633,27 +637,33 @@ public class MainActivity extends ActionBarActivity {
                         if (getArguments().getBoolean(ARG_RECORDING)) {
                             recButton.performClick();
                         }
-
                     }
                     if (getArguments().getBoolean(ARG_PLAYING)) {
                         playButton.performClick();
                     }
                 }
             });
-            final AlertDialog.Builder recDialog = new AlertDialog.Builder(getActivity());
 
+            if (settings.getBoolean("images", false)) {
+                String mDrawableName = "line_" + getArguments().getInt(ARG_SENTENCE_NUMBER);
+                imageSentence.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(mDrawableName, "drawable", context.getPackageName())));
+            }
+
+            final AlertDialog.Builder recDialog = new AlertDialog.Builder(getActivity());
             recDialog.setTitle("Record new sentence.");
             recDialog.setIcon(R.drawable.ic_launcher);
             recDialog.setMessage("A sentece's record is present.\nAre you sure you want to record it anyway?");
             recDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                }
-            });
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    }
+            );
 
             recDialog.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
+                    mViewPager.setPagingEnabled(false);
                     record = true;
                     playButton.setEnabled(false);
                     getArguments().putBoolean(ARG_RECORDING, true);
@@ -683,8 +693,10 @@ public class MainActivity extends ActionBarActivity {
                             playButton.setEnabled(false);
                         }
                         getArguments().putBoolean(ARG_RECORDING, false);
+                        getArguments().putBoolean(ARG_HANDFREE_RECORDING, false);
                         recButton.setBackgroundResource(R.drawable.record);
                         record = false;
+                        mViewPager.setPagingEnabled(true);
 
                         int index = mViewPager.getCurrentItem();
                         if (index > 1)
@@ -695,23 +707,30 @@ public class MainActivity extends ActionBarActivity {
                             ((PlaceholderFragment) mViewPager.getAdapter().instantiateItem(mViewPager, index + 1)).updateContent();
 
                     } else {
-                        if (PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("handsFree", false)
-                                && !getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
-                            getArguments().putBoolean(ARG_HANDFREE_RECORDING, true);
-                            handsFreeMode();
-                        } else {
-                            if (new File(rootDir + "/" + fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1) + ".raw").exists()
+                        if (PreferenceManager.getDefaultSharedPreferences(getActivity()).getString("name", "").matches("")) {
+                            Toast.makeText(context, "Please set the name of the speaker.", Toast.LENGTH_LONG).show();
+                            Intent i = new Intent(context, settings.class);
+                            startActivityForResult(i, RESULT_SETTINGS);
+                        }else{
+                            if (PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("handsFree", false)
                                     && !getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
-                                recDialog.show();
+                                getArguments().putBoolean(ARG_HANDFREE_RECORDING, true);
+                                handsFreeMode();
                             } else {
-                                record = true;
-                                playButton.setEnabled(false);
-                                getArguments().putBoolean(ARG_RECORDING, true);
-                                sentence.setBackgroundResource(R.color.recording);
-                                recButton.setBackgroundResource(R.drawable.record_stop);
-                                recorder = new AudioRecord(AudioSource.MIC, recorderSampleRate, recorderChannels, recorderEncoding, recorderMinBufferSize * 10);
-                                recorder.startRecording();
-                                startRecording(getArguments().getInt(ARG_SENTENCE_NUMBER));
+                                if (new File(rootDir + "/" + fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1) + ".raw").exists()
+                                        && !getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
+                                    recDialog.show();
+                                } else {
+                                    record = true;
+                                    mViewPager.setPagingEnabled(false);
+                                    playButton.setEnabled(false);
+                                    getArguments().putBoolean(ARG_RECORDING, true);
+                                    sentence.setBackgroundResource(R.color.recording);
+                                    recButton.setBackgroundResource(R.drawable.record_stop);
+                                    recorder = new AudioRecord(AudioSource.MIC, recorderSampleRate, recorderChannels, recorderEncoding, recorderMinBufferSize * 10);
+                                    recorder.startRecording();
+                                    startRecording(getArguments().getInt(ARG_SENTENCE_NUMBER));
+                                }
                             }
                         }
                     }
@@ -723,12 +742,14 @@ public class MainActivity extends ActionBarActivity {
                 @SuppressLint("ResourceAsColor")
                 public void onClick(View arg0) {
                     if (!getArguments().getBoolean(ARG_PLAYING)) {
+                        mViewPager.setPagingEnabled(false);
                         getArguments().putBoolean(ARG_PLAYING, true);
                         playButton.setBackgroundResource(R.drawable.play_stop);
                         recButton.setEnabled(false);
                         player = new MediaPlayer();
                         player.setOnCompletionListener(new OnCompletionListener() {
                             public void onCompletion(MediaPlayer mp) {
+                                mViewPager.setPagingEnabled(true);
                                 getArguments().putBoolean(ARG_PLAYING, false);
                                 playButton.setBackgroundResource(R.drawable.play);
                                 if (player != null) {
@@ -793,6 +814,7 @@ public class MainActivity extends ActionBarActivity {
                             Log.e(tag, "Fallo al reproducir el fichero");
                         }
                     } else {
+                        mViewPager.setPagingEnabled(true);
                         getArguments().putBoolean(ARG_PLAYING, false);
                         playButton.setBackgroundResource(R.drawable.play);
                         recButton.setEnabled(true);
@@ -802,7 +824,6 @@ public class MainActivity extends ActionBarActivity {
                         }
                     }
                 }
-
             });
 
             if (new File(rootDir + "/" + fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1) + ".raw").exists()) {
@@ -821,8 +842,10 @@ public class MainActivity extends ActionBarActivity {
         }
 
         public void updateContent() {
+            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
+
             if (getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
-                sentence.setBackgroundColor(R.color.black_overlay);
+                sentence.setBackgroundColor(getResources().getColor(R.color.black_overlay));
                 playButton.setEnabled(false);
             } else if (new File(rootDir + "/" + fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1) + ".raw").exists()) {
                 sentence.setBackgroundResource(R.color.recorded);
@@ -832,6 +855,11 @@ public class MainActivity extends ActionBarActivity {
                 playButton.setEnabled(false);
             }
             sentence.setText(getArguments().getString(ARG_SENTENCE));
+            imageSentence.setImageDrawable(null);
+            if (settings.getBoolean("images", false)) {
+                String mDrawableName = "line_" + getArguments().getInt(ARG_SENTENCE_NUMBER);
+                imageSentence.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(mDrawableName, "drawable", context.getPackageName())));
+            }
             progressBar.setProgress((int) getPercentDone());
             progress.setText(String.format("%.2f", getPercentDone()) + "%");
             sentenceNumber.setText(getResources().getString(R.string.sentence) + " " + Integer.toString(getArguments().getInt(ARG_SENTENCE_NUMBER)) + "/" + sentences.size());
@@ -839,16 +867,12 @@ public class MainActivity extends ActionBarActivity {
 
         public void handsFreeMode() {
             playButton.setEnabled(false);
-            sentence.setBackgroundColor(R.color.black_overlay);
+            sentence.setBackgroundColor(getResources().getColor(R.color.black_overlay));
             new Thread(new Runnable() {
                 public void run() {
                     Looper.prepare();
                     int init = mViewPager.getCurrentItem();
-                    File rootDir1BK = rootDir;
-                    File rootDir2BK = rootDir2;
-                    Boolean driver = false;
                     for (int i = init; i < sentences.size(); i++) {
-
                         if (getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
                             tts.speak(sentences.get(i), TextToSpeech.QUEUE_FLUSH, null);
                             long startTime = System.currentTimeMillis();
@@ -883,43 +907,21 @@ public class MainActivity extends ActionBarActivity {
                                 handler.sendMessage(msgObj);
                             }
 
-                            if (driver)
-                                rootDir = rootDir1BK;
-                            else {
-                                i--;
-                                rootDir = rootDir2BK;
-                            }
-
-                            if (driver) {
-                                if (i + 1 < sentences.size() && getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
-                                    try {
-                                        Thread.sleep(1000);
-                                        Message msgObj = new Message();
-                                        Bundle b = new Bundle();
-                                        b.putString("message", "next sentence");
-                                        b.putInt("sentence", i + 1);
-                                        b.putInt("move", i + 1);
-                                        msgObj.setData(b);
-                                        handler.sendMessage(msgObj);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                } else {
-                                    Message msgObj = new Message();
-                                    Bundle b = new Bundle();
-                                    b.putString("message", "finish");
-                                    b.putInt("sentence", init);
-                                    b.putInt("move", i);
-                                    msgObj.setData(b);
-                                    handler.sendMessage(msgObj);
-                                    Log.e("move", init + " - " + i);
-                                    if (!getArguments().getBoolean(ARG_HANDFREE_RECORDING)) break;
-                                }
+                            try {
+                                Thread.sleep(1000);
+                                Message msgObj = new Message();
+                                Bundle b = new Bundle();
+                                b.putString("message", "next sentence");
+                                b.putInt("sentence", i + 1);
+                                b.putInt("move", i + 1);
+                                msgObj.setData(b);
+                                handler.sendMessage(msgObj);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
                             }
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        driver = !driver;
                     }
                     getArguments().putBoolean(ARG_HANDFREE_RECORDING, false);
                 }
