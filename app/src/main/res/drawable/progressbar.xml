@@ -9,7 +9,7 @@
                 android:startColor="#080862"
                 android:centerColor="#080862"
                 android:centerY="0.75"
-                android:endColor="#FF001A"
+                android:endColor="#0808ff"
                 android:angle="270"
         />
     </shape>

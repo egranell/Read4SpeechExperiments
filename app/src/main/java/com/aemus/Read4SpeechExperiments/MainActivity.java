@@ -168,6 +168,7 @@ public class MainActivity extends ActionBarActivity {
             public void onInit(int status) {
             }
         });
+        // Añadir en la configuración la posibilidad de elegir el idioma
         tts.setLanguage(new Locale("es", "ES"));
 
         init();
@@ -176,16 +177,16 @@ public class MainActivity extends ActionBarActivity {
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
         sendDialog = new AlertDialog.Builder(this);
-        sendDialog.setTitle("Send records by email.");
+        sendDialog.setTitle(R.string.sendTitle);
         sendDialog.setIcon(R.drawable.ic_launcher);
-        sendDialog.setMessage("Sentence records are not completed.\nAre you sure you want to send it anyway?");
-        sendDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        sendDialog.setMessage(R.string.sendMessage);
+        sendDialog.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
             }
         });
 
-        sendDialog.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+        sendDialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 sendData(true);
@@ -193,10 +194,10 @@ public class MainActivity extends ActionBarActivity {
         });
 
         cleanDialog = new AlertDialog.Builder(this);
-        cleanDialog.setTitle("Clean records");
+        cleanDialog.setTitle(R.string.cleanTitle);
         cleanDialog.setIcon(R.drawable.ic_launcher);
-        cleanDialog.setMessage("Do you want to clean the records?");
-        cleanDialog.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+        cleanDialog.setMessage(R.string.cleanMessage);
+        cleanDialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
@@ -217,17 +218,17 @@ public class MainActivity extends ActionBarActivity {
                 thanksDialog.show();
             }
         });
-        cleanDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        cleanDialog.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
             }
         });
 
         thanksDialog = new AlertDialog.Builder(this);
-        thanksDialog.setTitle("All files deleted.");
+        thanksDialog.setTitle(R.string.thanksTitle);
         thanksDialog.setIcon(R.drawable.ic_launcher);
-        thanksDialog.setMessage("Thanks for your collaboration.");
-        thanksDialog.setNegativeButton("New record", new DialogInterface.OnClickListener() {
+        thanksDialog.setMessage(R.string.thanksMessage);
+        thanksDialog.setNegativeButton(R.string.newRecord, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 init();
@@ -238,7 +239,7 @@ public class MainActivity extends ActionBarActivity {
             }
         });
 
-        thanksDialog.setPositiveButton("Close", new DialogInterface.OnClickListener() {
+        thanksDialog.setPositiveButton(R.string.close, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 finish();
@@ -256,9 +257,9 @@ public class MainActivity extends ActionBarActivity {
         });
 
         notSpaceDialog = new AlertDialog.Builder(this);
-        notSpaceDialog.setTitle("Not enough free space.");
+        notSpaceDialog.setTitle(R.string.notSpaceTitle);
         notSpaceDialog.setIcon(R.drawable.ic_launcher);
-        notSpaceDialog.setPositiveButton("Close", new DialogInterface.OnClickListener() {
+        notSpaceDialog.setPositiveButton(R.string.close, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 finish();
@@ -447,12 +448,17 @@ public class MainActivity extends ActionBarActivity {
             }
         });
 
-        instructionsDialog = new AlertDialog.Builder(this, AlertDialog.THEME_HOLO_LIGHT);
-        instructionsDialog.setTitle("Instructions.");
+
+        try {
+            instructionsDialog = new AlertDialog.Builder(this, AlertDialog.THEME_HOLO_LIGHT);
+        } catch (NoSuchMethodError e) {
+            instructionsDialog = new AlertDialog.Builder(this);
+        }
+
+        instructionsDialog.setTitle(R.string.intructionTitle);
         instructionsDialog.setIcon(R.drawable.ic_launcher);
         instructionsDialog.setMessage(Html.fromHtml(getString(R.string.instructions)));
         instructionsDialog.setView(checkboxView);
-
         if (show) {
             instructionsDialog.show();
         }
@@ -519,7 +525,7 @@ public class MainActivity extends ActionBarActivity {
                 }*/
 
                 if (settings.getString("name", null) == null) {
-                    Toast.makeText(getApplicationContext(), "Please set the name of the speaker.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), R.string.setSpeakerName, Toast.LENGTH_LONG).show();
                     Intent i = new Intent(this, settings.class);
                     startActivityForResult(i, RESULT_SETTINGS);
                 }
@@ -650,17 +656,17 @@ public class MainActivity extends ActionBarActivity {
             }
 
             final AlertDialog.Builder recDialog = new AlertDialog.Builder(getActivity());
-            recDialog.setTitle("Record new sentence.");
+            recDialog.setTitle(R.string.recordTitle);
             recDialog.setIcon(R.drawable.ic_launcher);
-            recDialog.setMessage("A sentece's record is present.\nAre you sure you want to record it anyway?");
-            recDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                        }
+            recDialog.setMessage(R.string.recordMessage);
+            recDialog.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
                     }
+                }
             );
 
-            recDialog.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            recDialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     mViewPager.setPagingEnabled(false);
@@ -708,7 +714,7 @@ public class MainActivity extends ActionBarActivity {
 
                     } else {
                         if (PreferenceManager.getDefaultSharedPreferences(getActivity()).getString("name", "").matches("")) {
-                            Toast.makeText(context, "Please set the name of the speaker.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, R.string.setSpeakerName, Toast.LENGTH_LONG).show();
                             Intent i = new Intent(context, settings.class);
                             startActivityForResult(i, RESULT_SETTINGS);
                         }else{

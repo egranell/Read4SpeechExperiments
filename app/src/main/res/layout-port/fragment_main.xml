@@ -30,7 +30,8 @@
         android:text="@string/content"
         android:textColor="#FFFFFF"
         android:textSize="30sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:layout_centerInParent="true"/>
     <TextView
         android:id="@+id/sentence"
         android:layout_below="@+id/imageSentence"
@@ -80,7 +81,7 @@
                     android:layout_height="45dp"
                     android:layout_marginRight="30dp"
                     android:background="@drawable/playbutton"
-                    android:text="@string/escuchar_boton" />
+                    android:text="@string/play" />
 
 
 
@@ -92,7 +93,7 @@
                     android:layout_height="45dp"
                     android:layout_marginLeft="30dp"
                     android:background="@drawable/recbutton"
-                    android:text="@string/grabar_boton" />
+                    android:text="@string/record" />
 
 
             </LinearLayout>

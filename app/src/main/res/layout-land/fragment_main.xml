@@ -90,7 +90,7 @@ tools:context="com.example.Read4SpeechExperiments.MainActivity$PlaceholderFragme
                 android:layout_marginRight="10dp"
                 android:layout_marginLeft="10dp"
                 android:background="@drawable/playbutton"
-                android:text="@string/escuchar_boton"
+                android:text="@string/play"
                 android:layout_gravity="center" />
 
 
@@ -104,7 +104,7 @@ tools:context="com.example.Read4SpeechExperiments.MainActivity$PlaceholderFragme
                 android:layout_marginRight="10dp"
                 android:layout_marginLeft="10dp"
                 android:background="@drawable/recbutton"
-                android:text="@string/grabar_boton"
+                android:text="@string/play"
                 android:layout_gravity="center" />
 
             <TextView
