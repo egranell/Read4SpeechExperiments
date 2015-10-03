@@ -10,14 +10,13 @@
     <string name="play">Play</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
-    <string name="clean">Clean the records.</string>
-    <string name="intructionTitle">Instructions.</string>
+    <string name="intructionTitle">Instructions</string>
     <string name="instructions">Buttons:&lt;br /&gt;\&quot;Record\&quot;: records the audio.&lt;br /&gt;\&quot;Play\&quot;: plays the sentence audio file recorded.&lt;br /&gt;\&quot;Menu/Clean...\&quot;: delete all files recorded by this aplication.&lt;br /&gt;\&quot;Menu/Send...\&quot;: send all files recorded.&lt;br /&gt;&lt;br /&gt;Background color:&lt;br /&gt;\&quot;<![CDATA[<b><font color="#080862">Blue</font></b>]]>\&quot;: the sentence has not been recorded.&lt;br /&gt;\&quot;<![CDATA[<b><font color="#086208">Green</font></b>]]>\&quot;: the sentence has already been recorded.&lt;br /&gt;\&quot;<![CDATA[<b><font color="#620808">Red</font></b>]]>\&quot;: the sentence is being recorded.</string>
     <string name="showAtStart">Show instructions at the start.</string>
     <string name="notSpaceTitle">Not enough free space.</string>
-    <string name="sendTitle">Send the records.</string>
+    <string name="sendTitle">Send the records</string>
     <string name="sendMessage">Sentence records are not completed.\nAre you sure you want to send it anyway?</string>
-    <string name="cleanTitle">Clean records</string>
+    <string name="cleanTitle">Clean the records</string>
     <string name="cleanMessage">Do you want to clean the records?</string>
     <string name="thanksTitle">All files deleted.</string>
     <string name="thanksMessage">Thanks for your collaboration.</string>
@@ -27,4 +26,5 @@
     <string name="menu">Menu</string>
     <string name="sentence">Sentence</string>
     <string name="setSpeakerName">Please set the name of the speaker.</string>
+    <string name="settings">Settings</string>
 </resources>
