@@ -7,7 +7,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaRecorder.AudioSource;
@@ -44,8 +46,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -167,7 +171,7 @@ public class MainActivity extends ActionBarActivity {
             public void onInit(int status) {
             }
         });
-        // Añadir en la configuración la posibilidad de elegir el idioma
+        // Añadir en la configuración la posibilidad de habilitar el sintetizador y elegir el idioma
         tts.setLanguage(new Locale("es", "ES"));
 
         init();
@@ -310,13 +314,10 @@ public class MainActivity extends ActionBarActivity {
 
     void init() {
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        /*if (!new File(settings.getString("mandatoryFile", "NULL")).exists()) {
-            Toast.makeText(getApplicationContext(), "To use this software it is necessary to define at least the mandatory sentences file to read.\nIt will load the demo sentences.", Toast.LENGTH_LONG).show();
-        }*/
-
-        if (settings.getString("name", "").matches("")) {
-            Toast.makeText(getApplicationContext(), "Please set the name of the speaker.", Toast.LENGTH_LONG).show();
-        }
+        if (!new File(settings.getString("mandatoryFile", "NULL")).exists())
+            Toast.makeText(getApplicationContext(), R.string.senteceFileNeeded, Toast.LENGTH_LONG).show();
+        if (settings.getString("name", "").matches(""))
+            Toast.makeText(getApplicationContext(), R.string.setSpeakerID, Toast.LENGTH_LONG).show();
         rootDir = new File(Environment.getExternalStorageDirectory().getPath() + "/Read4SpeechExperiments/" +
                 settings.getString("audioPath", ""));
         name = settings.getString("name", "");
@@ -326,7 +327,7 @@ public class MainActivity extends ActionBarActivity {
         Long spaceAvailable = getAvailableSpaceInKB();
         Long spaceNecessary = (long) sentences.size() * 300;
         if (spaceAvailable < spaceNecessary) {
-            notSpaceDialog.setMessage("There is not enough free space to record all sentences.\nPlease free at least " + (spaceNecessary / 1024 + 1) + " MB before using this application.");
+            notSpaceDialog.setMessage(R.string.spaceNecessary1 + String.valueOf(spaceNecessary / 1024 + 1) + R.string.spaceNecessary2);
             notSpaceDialog.show();
         }
         if (!rootDir.exists()) {
@@ -334,7 +335,7 @@ public class MainActivity extends ActionBarActivity {
                 Log.e(tag, "Cannot create directory: " + rootDir);
             }
         }
-        if (!new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt").exists())
+        if (new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt").exists())
             writeToFile(fileNames, sentences);
     }
 
@@ -476,7 +477,7 @@ public class MainActivity extends ActionBarActivity {
     void sendData(Boolean confirmation) {
         float done = getPercentDone();
         if (done == 0) {
-            Toast.makeText(getApplicationContext(), "There are not records to send.", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), R.string.noRecords, Toast.LENGTH_LONG).show();
         } else {
             if (done < 100 && !confirmation) {
                 sendDialog.show();
@@ -524,15 +525,16 @@ public class MainActivity extends ActionBarActivity {
                 }
 
                 if (settings.getString("name", null) == null) {
-                    Toast.makeText(getApplicationContext(), R.string.setSpeakerName, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), R.string.setSpeakerID, Toast.LENGTH_LONG).show();
                     Intent i = new Intent(this, settings.class);
                     startActivityForResult(i, RESULT_SETTINGS);
                 }
 
-                File optionalFile = new File(settings.getString("optionalFile", ""));
+                /*File optionalFile = new File(settings.getString("optionalFile", ""));
                 if (!optionalFile.exists() && optionalFile.getAbsolutePath().matches("/")) {
-                    //Toast.makeText(getApplicationContext(), "The optional sentences file: " + optionalFile.getAbsolutePath() + " doesn't exist.", Toast.LENGTH_LONG).show();
-                }
+                    Toast.makeText(getApplicationContext(), "The optional sentences file: " + optionalFile.getAbsolutePath() + " doesn't exist.", Toast.LENGTH_LONG).show();
+                }*/
+
                 File file = new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt");
                 if (file.exists()) {
                     if (!file.delete()) {
@@ -559,7 +561,7 @@ public class MainActivity extends ActionBarActivity {
         private static final String ARG_RECORDING = "recording";
         private static final String ARG_HANDFREE_RECORDING = "handFreeRecording";
         private static final String ARG_PLAYING = "playing";
-        public final Handler handler;
+        private static Handler handler = null;
         TextView sentenceNumber;
         TextView progress;
         TextView sentence;
@@ -632,8 +634,8 @@ public class MainActivity extends ActionBarActivity {
             progressBar.setMax(100);
             progressBar.setProgressDrawable(getResources().getDrawable(R.drawable.progressbar));
             progressBar.setProgress((int) getPercentDone());
-            progress.setText(String.format("%.2f", getPercentDone()) + "%");
-            sentenceNumber.setText(getResources().getString(R.string.sentence) + " " + Integer.toString(getArguments().getInt(ARG_SENTENCE_NUMBER)) + "/" + sentences.size());
+            progress.setText(String.format("%s%%", String.format("%.2f", getPercentDone())));
+            sentenceNumber.setText(String.format("%s%s/%d", getResources().getString(R.string.sentence), Integer.toString(getArguments().getInt(ARG_SENTENCE_NUMBER)), sentences.size()));
             sentence.setText(sentences.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1));
             sentence.setOnClickListener(new OnClickListener() {
                 public void onClick(View arg0) {
@@ -713,7 +715,7 @@ public class MainActivity extends ActionBarActivity {
 
                     } else {
                         if (PreferenceManager.getDefaultSharedPreferences(getActivity()).getString("name", "").matches("")) {
-                            Toast.makeText(context, R.string.setSpeakerName, Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, R.string.setSpeakerID, Toast.LENGTH_LONG).show();
                             Intent i = new Intent(context, settings.class);
                             startActivityForResult(i, RESULT_SETTINGS);
                         }else{
@@ -818,6 +820,51 @@ public class MainActivity extends ActionBarActivity {
                         } catch (IOException e) {
                             Log.e(tag, "Fallo al reproducir el fichero");
                         }
+
+
+
+
+/* Utilizando audiotrack tal vez no haga falta construir el fichero wav
+                            File file = new File(fileName + ".raw");
+
+                            int shortSizeInBytes = Short.SIZE/Byte.SIZE;
+
+                            int bufferSizeInBytes = (int)(file.length()/shortSizeInBytes);
+                            short[] audioData = new short[bufferSizeInBytes];
+
+                            try {
+                                InputStream inputStream = new FileInputStream(file);
+                                BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+                                DataInputStream dataInputStream = new DataInputStream(bufferedInputStream);
+
+                                int i = 0;
+                                while(dataInputStream.available() > 0){
+                                    audioData[i] = dataInputStream.readShort();
+                                    i++;
+                                }
+
+                                dataInputStream.close();
+
+                                AudioTrack audioTrack = new AudioTrack(
+                                        AudioManager.STREAM_MUSIC,
+                                        16000,
+                                        AudioFormat.CHANNEL_CONFIGURATION_MONO,
+                                        AudioFormat.ENCODING_PCM_16BIT,
+                                        bufferSizeInBytes,
+                                        AudioTrack.MODE_STREAM);
+
+                                audioTrack.play();
+                                audioTrack.write(audioData, 0, bufferSizeInBytes);
+
+
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }*/
+
+
+
                     } else {
                         mViewPager.setPagingEnabled(true);
                         getArguments().putBoolean(ARG_PLAYING, false);
@@ -866,8 +913,8 @@ public class MainActivity extends ActionBarActivity {
                 imageSentence.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(mDrawableName, "drawable", context.getPackageName())));
             }
             progressBar.setProgress((int) getPercentDone());
-            progress.setText(String.format("%.2f", getPercentDone()) + "%");
-            sentenceNumber.setText(getResources().getString(R.string.sentence) + " " + Integer.toString(getArguments().getInt(ARG_SENTENCE_NUMBER)) + "/" + sentences.size());
+            progress.setText(String.format("%s%%", String.format("%.2f", getPercentDone())));
+            sentenceNumber.setText(String.format("%s %s/%d", getResources().getString(R.string.sentence), Integer.toString(getArguments().getInt(ARG_SENTENCE_NUMBER)), sentences.size()));
         }
 
         public void handsFreeMode() {
@@ -881,9 +928,11 @@ public class MainActivity extends ActionBarActivity {
                         if (getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
                             tts.speak(sentences.get(i), TextToSpeech.QUEUE_FLUSH, null);
                             long startTime = System.currentTimeMillis();
-                            while ((System.currentTimeMillis() - startTime) < 1000) {
+                            while (true) {
+                                if (!((System.currentTimeMillis() - startTime) < 1000)) break;
                             }
-                            while (tts.isSpeaking()) {
+                            while (true) {
+                                if (!(tts.isSpeaking())) break;
                             }
                         } else {
                             i--;

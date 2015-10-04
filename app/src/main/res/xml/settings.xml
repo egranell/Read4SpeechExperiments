@@ -1,35 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="@string/settingsTitle">
-        <EditTextPreference
-            android:id="@+id/mandatorySentences"
-            android:key="mandatoryFile"
-            android:summary="@string/mandatorySentencesSummary"
-            android:title="@string/mandatorySentencesTitle" />
-        <EditTextPreference
-            android:id="@+id/audioPath"
-            android:key="audioPath"
-            android:summary="@string/audioPathSummary"
-            android:title="@string/audioPathTitle" />
+    <!---  <PreferenceCategory android:title="@string/settingsTitle"> -->
+          <EditTextPreference
+              android:id="@+id/mandatorySentences"
+              android:key="mandatoryFile"
+              android:summary="@string/mandatorySentencesSummary"
+              android:title="@string/mandatorySentencesTitle" />
+          <EditTextPreference
+              android:id="@+id/audioPath"
+              android:key="audioPath"
+              android:summary="@string/audioPathSummary"
+              android:title="@string/audioPathTitle" />
 
-        <EditTextPreference
-            android:id="@+id/name"
-            android:key="name"
-            android:summary="@string/speakerIDSummary"
-            android:title="@string/speakerIDTitle"/>
+          <EditTextPreference
+              android:id="@+id/name"
+              android:key="name"
+              android:summary="@string/speakerIDSummary"
+              android:title="@string/speakerIDTitle"/>
 
-        <!---   <CheckBoxPreference
-               android:defaultValue="false"
-               android:key="images"
-               android:summary="@string/imagesSummary"
-               android:title="@string/imagesTitle"/>
-        <CheckBoxPreference
-           android:defaultValue="false"
-           android:key="handsFree"
-           android:summary="Permits to acquire the audio without user interaction"
-           android:title="Hands free" /> -->
-</PreferenceCategory>
+          <!---   <CheckBoxPreference
+                 android:defaultValue="false"
+                 android:key="images"
+                 android:summary="@string/imagesSummary"
+                 android:title="@string/imagesTitle"/>
+          <CheckBoxPreference
+             android:defaultValue="false"
+             android:key="handsFree"
+             android:summary="Permits to acquire the audio without user interaction"
+             android:title="Hands free" /> -->
+    <!--- </PreferenceCategory> -->
 
 <!---<PreferenceCategory android:title="Experiments state">
 
