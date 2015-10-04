@@ -20,7 +20,6 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 import android.speech.tts.TextToSpeech;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -203,7 +202,7 @@ public class MainActivity extends ActionBarActivity {
                 SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
                 SharedPreferences.Editor editor = settings.edit();
                 editor.putString("name", "");
-                editor.commit();
+                editor.apply();
 
                 if (rootDir.exists()) {
                     for (File f : rootDir.listFiles()) {
@@ -444,7 +443,7 @@ public class MainActivity extends ActionBarActivity {
                 SharedPreferences settings = getSharedPreferences("Preferences", 0);
                 SharedPreferences.Editor editor = settings.edit();
                 editor.putBoolean("show", isChecked);
-                editor.commit();
+                editor.apply();
             }
         });
 
@@ -518,11 +517,11 @@ public class MainActivity extends ActionBarActivity {
 
                 // Check for text files, and if there is not a mandatory file load the demo sentences.
                 File mandatoryFile = new File(settings.getString("mandatoryFile", ""));
-                /*if (!mandatoryFile.exists() && mandatoryFile.getAbsolutePath().matches("/")) {
-                    Toast.makeText(getApplicationContext(), "The mandatory sentences file: " + mandatoryFile.getAbsolutePath() + " doesn't exist.", Toast.LENGTH_LONG).show();
+                if (!mandatoryFile.exists() && mandatoryFile.getAbsolutePath().matches("/")) {
+                    Toast.makeText(getApplicationContext(), R.string.notSentencesFile + mandatoryFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
                     Intent i = new Intent(this, settings.class);
                     startActivityForResult(i, RESULT_SETTINGS);
-                }*/
+                }
 
                 if (settings.getString("name", null) == null) {
                     Toast.makeText(getApplicationContext(), R.string.setSpeakerName, Toast.LENGTH_LONG).show();
