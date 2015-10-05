@@ -10,8 +10,6 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
-import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaRecorder.AudioSource;
 import android.net.Uri;
 import android.os.Bundle;
@@ -59,7 +57,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -74,8 +71,9 @@ public class MainActivity extends ActionBarActivity {
     private static int recorderChannels = AudioFormat.CHANNEL_IN_MONO;
     private static int recorderEncoding = AudioFormat.ENCODING_PCM_16BIT;
     private static int recorderMinBufferSize = AudioRecord.getMinBufferSize(recorderSampleRate, recorderChannels, recorderEncoding);
+    private static int playerChannels = AudioFormat.CHANNEL_OUT_MONO;
     private static AudioRecord recorder;
-    private static MediaPlayer player;
+    private static AudioTrack player;
     private static TextToSpeech tts;
 
     private static Boolean record = false;
@@ -108,8 +106,6 @@ public class MainActivity extends ActionBarActivity {
         Thread streamThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                int sizeAudio = 0;
-                RandomAccessFile cab;
                 byte[] buffer = new byte[recorderMinBufferSize];
                 BufferedOutputStream bos;
                 try {
@@ -118,7 +114,6 @@ public class MainActivity extends ActionBarActivity {
                         int recorderBufferSize = recorder.read(buffer, 0, buffer.length);
                         if (recorderBufferSize < 0)
                             break;
-                        sizeAudio += buffer.length;
                         try {
                             bos.write(buffer, 0, recorderBufferSize);
                             bos.flush();
@@ -131,26 +126,7 @@ public class MainActivity extends ActionBarActivity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
-                    // Write WAV header
-                    cab = new RandomAccessFile(rootDir + "/" + fileNames.get(position - 1) + ".cab", "rw");
-                    cab.setLength(0);
-                    cab.writeBytes("RIFF");
-                    cab.writeInt(Integer.reverseBytes(36 + sizeAudio));
-                    cab.writeBytes("WAVE");
-                    cab.writeBytes("fmt ");
-                    cab.writeInt(Integer.reverseBytes(16));
-                    cab.writeShort(Short.reverseBytes((short) 1));
-                    cab.writeShort(Short.reverseBytes((short) 1));
-                    cab.writeInt(Integer.reverseBytes(recorderSampleRate));
-                    cab.writeInt(Integer.reverseBytes(recorderSampleRate * 16 / 8));
-                    cab.writeShort(Short.reverseBytes((short) (16 / 8)));
-                    cab.writeShort(Short.reverseBytes((short) 16));
-                    cab.writeBytes("data");
-                    cab.writeInt(Integer.reverseBytes(sizeAudio));
                 } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -383,7 +359,7 @@ public class MainActivity extends ActionBarActivity {
                         l++;
                         if (numbers.contains(l)) {
                             sentences.add(line);
-                            fileNames.add(name + "_test_" + String.format("%02d", l) + "_" + Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID));
+                            fileNames.add(String.format("%s_test_%s_%s", name, String.format("%02d", l), Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID)));
                         }
                     }
                 } catch (IOException e) {
@@ -515,25 +491,11 @@ public class MainActivity extends ActionBarActivity {
         switch (requestCode) {
             case RESULT_SETTINGS:
                 SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-
-                // Check for text files, and if there is not a mandatory file load the demo sentences.
-                File mandatoryFile = new File(settings.getString("mandatoryFile", ""));
-                if (!mandatoryFile.exists() && mandatoryFile.getAbsolutePath().matches("/")) {
-                    Toast.makeText(getApplicationContext(), R.string.notSentencesFile + mandatoryFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
-                    Intent i = new Intent(this, settings.class);
-                    startActivityForResult(i, RESULT_SETTINGS);
-                }
-
                 if (settings.getString("name", null) == null) {
                     Toast.makeText(getApplicationContext(), R.string.setSpeakerID, Toast.LENGTH_LONG).show();
                     Intent i = new Intent(this, settings.class);
                     startActivityForResult(i, RESULT_SETTINGS);
                 }
-
-                /*File optionalFile = new File(settings.getString("optionalFile", ""));
-                if (!optionalFile.exists() && optionalFile.getAbsolutePath().matches("/")) {
-                    Toast.makeText(getApplicationContext(), "The optional sentences file: " + optionalFile.getAbsolutePath() + " doesn't exist.", Toast.LENGTH_LONG).show();
-                }*/
 
                 File file = new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt");
                 if (file.exists()) {
@@ -661,10 +623,10 @@ public class MainActivity extends ActionBarActivity {
             recDialog.setIcon(R.drawable.ic_launcher);
             recDialog.setMessage(R.string.recordMessage);
             recDialog.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
                     }
-                }
             );
 
             recDialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
@@ -718,7 +680,7 @@ public class MainActivity extends ActionBarActivity {
                             Toast.makeText(context, R.string.setSpeakerID, Toast.LENGTH_LONG).show();
                             Intent i = new Intent(context, settings.class);
                             startActivityForResult(i, RESULT_SETTINGS);
-                        }else{
+                        } else {
                             if (PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("handsFree", false)
                                     && !getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
                                 getArguments().putBoolean(ARG_HANDFREE_RECORDING, true);
@@ -753,9 +715,19 @@ public class MainActivity extends ActionBarActivity {
                         getArguments().putBoolean(ARG_PLAYING, true);
                         playButton.setBackgroundResource(R.drawable.play_stop);
                         recButton.setEnabled(false);
-                        player = new MediaPlayer();
-                        player.setOnCompletionListener(new OnCompletionListener() {
-                            public void onCompletion(MediaPlayer mp) {
+                        File file = new File(String.format("%s/%s.raw", rootDir, fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1)));
+                        int bufferSizeInBytes = (int) file.length();
+                        byte[] audioData = new byte[bufferSizeInBytes];
+
+                        player = new AudioTrack(AudioManager.STREAM_MUSIC, recorderSampleRate, playerChannels, recorderEncoding, bufferSizeInBytes, AudioTrack.MODE_STREAM);
+                        player.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener() {
+                            @Override
+                            public void onPeriodicNotification(AudioTrack track) {
+                            }
+
+                            @Override
+                            public void onMarkerReached(AudioTrack track) {
+                                Log.e(tag, "Audio track end of file reached...");
                                 mViewPager.setPagingEnabled(true);
                                 getArguments().putBoolean(ARG_PLAYING, false);
                                 playButton.setBackgroundResource(R.drawable.play);
@@ -766,105 +738,27 @@ public class MainActivity extends ActionBarActivity {
                                 recButton.setEnabled(true);
                             }
                         });
-                        String fileName = rootDir + "/" + fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1);
+
                         try {
-                            // Concatenate WAV header with RAW file to obtain the WAV file.
-                            File cab = new File(fileName + ".cab");
-                            File raw = new File(fileName + ".raw");
+                            InputStream inputStream = new FileInputStream(file);
+                            BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+                            DataInputStream dataInputStream = new DataInputStream(bufferedInputStream);
 
-                            InputStream iscab = new FileInputStream(cab);
-                            InputStream israw = new FileInputStream(raw);
-
-                            RandomAccessFile rawav = new RandomAccessFile(fileName + ".wav", "rw");
-                            rawav.setLength(0);
-
-                            byte[] bytes = new byte[(int) cab.length()];
-
-                            // Read in the bytes
-                            int offset = 0;
-                            int numRead;
-                            while (offset < bytes.length && (numRead = iscab.read(bytes, offset, bytes.length - offset)) >= 0) {
-                                offset += numRead;
+                            int i = 0;
+                            while (dataInputStream.available() > 0) {
+                                audioData[i] = dataInputStream.readByte();
+                                i++;
                             }
+                            dataInputStream.close();
 
-                            // Ensure all the bytes have been read in
-                            if (offset < bytes.length) {
-                                throw new IOException("Could not completely read cab file");
-                            }
-                            iscab.close();
-                            rawav.write(bytes);
-                            bytes = new byte[(int) raw.length()];
-
-                            // Read in the bytes
-                            offset = 0;
-                            while (offset < bytes.length && (numRead = israw.read(bytes, offset, bytes.length - offset)) >= 0) {
-                                offset += numRead;
-                            }
-
-                            // Ensure all the bytes have been read in
-                            if (offset < bytes.length) {
-                                throw new IOException("Could not completely read raw file");
-                            }
-
-                            israw.close();
-                            rawav.write(bytes);
-                            rawav.close();
-
+                            player.write(audioData, 0, bufferSizeInBytes);
+                            player.setNotificationMarkerPosition(bufferSizeInBytes / 2);
+                            player.play();
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
                         } catch (IOException e) {
-                            Log.e(tag, "Fallo al crear fichero wav");
+                            e.printStackTrace();
                         }
-                        try {
-                            player.setDataSource(fileName + ".wav");
-                            player.prepare();
-                            player.start();
-                        } catch (IOException e) {
-                            Log.e(tag, "Fallo al reproducir el fichero");
-                        }
-
-
-
-
-/* Utilizando audiotrack tal vez no haga falta construir el fichero wav
-                            File file = new File(fileName + ".raw");
-
-                            int shortSizeInBytes = Short.SIZE/Byte.SIZE;
-
-                            int bufferSizeInBytes = (int)(file.length()/shortSizeInBytes);
-                            short[] audioData = new short[bufferSizeInBytes];
-
-                            try {
-                                InputStream inputStream = new FileInputStream(file);
-                                BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-                                DataInputStream dataInputStream = new DataInputStream(bufferedInputStream);
-
-                                int i = 0;
-                                while(dataInputStream.available() > 0){
-                                    audioData[i] = dataInputStream.readShort();
-                                    i++;
-                                }
-
-                                dataInputStream.close();
-
-                                AudioTrack audioTrack = new AudioTrack(
-                                        AudioManager.STREAM_MUSIC,
-                                        16000,
-                                        AudioFormat.CHANNEL_CONFIGURATION_MONO,
-                                        AudioFormat.ENCODING_PCM_16BIT,
-                                        bufferSizeInBytes,
-                                        AudioTrack.MODE_STREAM);
-
-                                audioTrack.play();
-                                audioTrack.write(audioData, 0, bufferSizeInBytes);
-
-
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }*/
-
-
-
                     } else {
                         mViewPager.setPagingEnabled(true);
                         getArguments().putBoolean(ARG_PLAYING, false);
@@ -878,7 +772,7 @@ public class MainActivity extends ActionBarActivity {
                 }
             });
 
-            if (new File(rootDir + "/" + fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1) + ".raw").exists()) {
+            if (new File(String.format("%s/%s.raw", rootDir, fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1))).exists()) {
                 sentence.setBackgroundResource(R.color.recorded);
                 playButton.setEnabled(true);
             } else {

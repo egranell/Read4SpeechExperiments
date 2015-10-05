@@ -24,7 +24,7 @@
     <string name="recordMessage">Esta frase ya se ha grabado.\n¿Quieres volverla a grabar?\nAl grabarla de nuevo se sobreescribirá la grabación anterior.</string>
     <string name="newRecord">Nueva grabación</string>
     <string name="menu">Menú</string>
-    <string name="sentence">Frase</string>
+    <string name="sentence">Frase </string>
     <string name="setSpeakerID">Por favor, indique un identificador para el locutor.</string>
     <string name="settings">Configuración</string>
     <string name="audioPathSummary">Directorio en el que se guardarán los ficheros de audio.</string>
@@ -37,7 +37,7 @@
     <string name="mandatorySentencesSummary">Ruta abasoluta al fichero de texto que contiene las frases a leer, una por línea.</string>
     <string name="mandatorySentencesTitle">Fichero de las frases</string>
     <string name="notSentencesFile">El fichero de frases indicado no existe: </string>
-    <string name="senteceFileNeeded">Se necesita un fichero de texto con la lista de frase. Se van a cargar unas frases como demostración.</string>
+    <string name="senteceFileNeeded">Se necesita un fichero de texto con las frases. Se van a cargar unas frases como demostración.</string>
     <string name="spaceNecessary1">No hay espacio suficiente para grabar todas las frases.\nPor favos, libere al menos </string>
     <string name="spaceNecessary2"> MB antes de utilizar esta aplicación.</string>
     <string name="noRecords">No hay grabaciones.</string>
