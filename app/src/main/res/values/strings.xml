@@ -24,7 +24,7 @@
     <string name="recordMessage">Esta frase ya se ha grabado.\n¿Quieres volverla a grabar?\nAl grabarla de nuevo se sobreescribirá la grabación anterior.</string>
     <string name="newRecord">Nueva grabación</string>
     <string name="menu">Menú</string>
-    <string name="sentence">Frase </string>
+    <string name="sentence">Frase</string>
     <string name="setSpeakerID">Por favor, indique un identificador para el locutor.</string>
     <string name="settings">Configuración</string>
     <string name="audioPathSummary">Directorio en el que se guardarán los ficheros de audio.</string>

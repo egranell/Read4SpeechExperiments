@@ -19,16 +19,16 @@
               android:summary="@string/speakerIDSummary"
               android:title="@string/speakerIDTitle"/>
 
-          <!---   <CheckBoxPreference
-                 android:defaultValue="false"
-                 android:key="images"
-                 android:summary="@string/imagesSummary"
-                 android:title="@string/imagesTitle"/>
-          <CheckBoxPreference
-             android:defaultValue="false"
-             android:key="handsFree"
-             android:summary="Permits to acquire the audio without user interaction"
-             android:title="Hands free" /> -->
+    <!---        <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="images"
+                android:summary="@string/imagesSummary"
+                android:title="@string/imagesTitle"/>
+         <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="handsFree"
+            android:summary="Permits to acquire the audio without user interaction"
+            android:title="Hands free" /> -->
     <!--- </PreferenceCategory> -->
 
 <!---<PreferenceCategory android:title="Experiments state">
