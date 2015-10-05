@@ -153,6 +153,7 @@ public class MainActivity extends ActionBarActivity {
         init();
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         mViewPager = (CustomViewPager) findViewById(R.id.pager);
+        mViewPager.setOffscreenPageLimit(0);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
         sendDialog = new AlertDialog.Builder(this);
@@ -567,7 +568,6 @@ public class MainActivity extends ActionBarActivity {
             args.putBoolean(ARG_HANDFREE_RECORDING, false);
             args.putBoolean(ARG_PLAYING, false);
             fragment.setArguments(args);
-
             return fragment;
         }
 
