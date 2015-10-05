@@ -597,7 +597,7 @@ public class MainActivity extends ActionBarActivity {
             progressBar.setProgressDrawable(getResources().getDrawable(R.drawable.progressbar));
             progressBar.setProgress((int) getPercentDone());
             progress.setText(String.format("%s%%", String.format("%.2f", getPercentDone())));
-            sentenceNumber.setText(String.format("%s%s/%d", getResources().getString(R.string.sentence), Integer.toString(getArguments().getInt(ARG_SENTENCE_NUMBER)), sentences.size()));
+            sentenceNumber.setText(String.format("%s %s/%d", getResources().getString(R.string.sentence), Integer.toString(getArguments().getInt(ARG_SENTENCE_NUMBER)), sentences.size()));
             sentence.setText(sentences.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1));
             sentence.setOnClickListener(new OnClickListener() {
                 public void onClick(View arg0) {
@@ -654,7 +654,7 @@ public class MainActivity extends ActionBarActivity {
                                 recorder.release();
                             }
                         }
-                        if (new File(rootDir + "/" + fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1) + ".raw").exists()) {
+                        if (new File(String.format("%s/%s.raw", rootDir, fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1))).exists()) {
                             sentence.setBackgroundResource(R.color.recorded);
                             playButton.setEnabled(true);
                         } else {
@@ -686,7 +686,7 @@ public class MainActivity extends ActionBarActivity {
                                 getArguments().putBoolean(ARG_HANDFREE_RECORDING, true);
                                 handsFreeMode();
                             } else {
-                                if (new File(rootDir + "/" + fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1) + ".raw").exists()
+                                if (new File(String.format("%s/%s.raw", rootDir, fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1))).exists()
                                         && !getArguments().getBoolean(ARG_HANDFREE_RECORDING)) {
                                     recDialog.show();
                                 } else {
