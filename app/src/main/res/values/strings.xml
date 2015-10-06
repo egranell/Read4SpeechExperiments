@@ -31,7 +31,7 @@
     <string name="audioPathTitle">Directorio para el audio</string>
     <string name="speakerIDSummary">Identificador del locutor.</string>
     <string name="speakerIDTitle">Locutor ID</string>
-    <string name="speakerIDHint">Sólo se permiten 20 carácteres, letras, dígitos, _ y -"</string>
+    <string name="speakerIDHint">20 carácteres (letras y números) máx."</string>
     <string name="imagesSummary">Muestra las imágenes de las líneas de texto a leer, si están disponibles.</string>
     <string name="imagesTitle">Muestra las imágenes</string>
     <string name="settingsTitle">Configuración general</string>

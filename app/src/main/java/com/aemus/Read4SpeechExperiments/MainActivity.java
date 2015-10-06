@@ -150,12 +150,6 @@ public class MainActivity extends ActionBarActivity {
         // Añadir en la configuración la posibilidad de habilitar el sintetizador y elegir el idioma
         tts.setLanguage(new Locale("es", "ES"));
 
-        init();
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-        mViewPager = (CustomViewPager) findViewById(R.id.pager);
-        mViewPager.setOffscreenPageLimit(0);
-        mViewPager.setAdapter(mSectionsPagerAdapter);
-
         sendDialog = new AlertDialog.Builder(this);
         sendDialog.setTitle(R.string.sendTitle);
         sendDialog.setIcon(R.drawable.ic_launcher);
@@ -256,6 +250,12 @@ public class MainActivity extends ActionBarActivity {
             }
         });
 
+        init();
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+        mViewPager = (CustomViewPager) findViewById(R.id.pager);
+        mViewPager.setOffscreenPageLimit(0);
+        mViewPager.setAdapter(mSectionsPagerAdapter);
+
         SharedPreferences settings = getSharedPreferences("Preferences", 0);
         boolean show = settings.getBoolean("show", true);
         showInstructions(show);
@@ -299,19 +299,20 @@ public class MainActivity extends ActionBarActivity {
 
         //Check if there is enough space on the SD (about 300KB per phrase)
         Long spaceAvailable = getAvailableSpaceInKB();
-        Long spaceNecessary = (long) sentences.size() * 300;
+        Long spaceNecessary = (long) sentences.size() * 200;
         if (spaceAvailable < spaceNecessary) {
-            notSpaceDialog.setMessage(R.string.spaceNecessary1 + String.valueOf(spaceNecessary / 1024 + 1) + R.string.spaceNecessary2);
+            Log.e(tag,String.format("%s %s %s", getResources().getString(R.string.spaceNecessary1), String.valueOf(spaceNecessary / 1024 + 1), getResources().getString(R.string.spaceNecessary2)));
+            notSpaceDialog.setMessage(String.format("%s %s %s", getResources().getString(R.string.spaceNecessary1), String.valueOf(spaceNecessary / 1024 + 1), getResources().getString(R.string.spaceNecessary2)));
             notSpaceDialog.show();
         }
-        
+
         if (!rootDir.exists())
             if (!rootDir.mkdirs())
                 Log.e(tag, "Cannot create directory: " + rootDir);
 
         if (!new File(String.format("%s/%s_transcripts_%s.txt", rootDir, name, ID)).exists())
             if(!writeToFile(fileNames, sentences))
-                Log.e(tag, String.format("Cannot create the file of transcription: %s%s_transcripts_%s.txt", rootDir, name, ID));
+                Log.e(tag, String.format("Cannot create the file of transcription: %s/%s_transcripts_%s.txt", rootDir, name, ID));
     }
 
     protected void loadLines(String mandatoryFile, String optionalFile, int optionalSentences) {
@@ -716,13 +717,14 @@ public class MainActivity extends ActionBarActivity {
                 @SuppressWarnings("resource")
                 @SuppressLint("ResourceAsColor")
                 public void onClick(View arg0) {
-                    if (!getArguments().getBoolean(ARG_PLAYING)) {
+                    File file = new File(String.format("%s/%s.raw", rootDir, fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1)));
+                    int bufferSizeInBytes = (int) file.length();
+                    if (!getArguments().getBoolean(ARG_PLAYING) && bufferSizeInBytes > 0) {
                         mViewPager.setPagingEnabled(false);
                         getArguments().putBoolean(ARG_PLAYING, true);
                         playButton.setBackgroundResource(R.drawable.play_stop);
                         recButton.setEnabled(false);
-                        File file = new File(String.format("%s/%s.raw", rootDir, fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1)));
-                        int bufferSizeInBytes = (int) file.length();
+
                         byte[] audioData = new byte[bufferSizeInBytes];
 
                         player = new AudioTrack(AudioManager.STREAM_MUSIC, recorderSampleRate, playerChannels, recorderEncoding, bufferSizeInBytes, AudioTrack.MODE_STREAM);
