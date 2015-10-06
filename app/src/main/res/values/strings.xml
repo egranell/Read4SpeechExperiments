@@ -41,4 +41,5 @@
     <string name="spaceNecessary1">No hay espacio suficiente para grabar todas las frases.\nPor favos, libere al menos </string>
     <string name="spaceNecessary2"> MB antes de utilizar esta aplicación.</string>
     <string name="noRecords">No hay grabaciones.</string>
+    <string name="noRecordToDelete">No hay grabaciones que borrar.</string>
 </resources>

@@ -7,22 +7,23 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.example.Read4SpeechExperiments.MainActivity$PlaceholderFragment" >
+    tools:context="com.example.Read4SpeechExperiments.MainActivity$PlaceholderFragment">
+
     <TextView
         android:id="@+id/sentenceNumber"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
         android:gravity="center"
         android:text="@string/content"
-        android:textSize="20sp"
-        android:layout_marginBottom="5dp"/>
+        android:textSize="20sp" />
 
     <ImageView
-
         android:id="@+id/imageSentence"
-        android:layout_below="@+id/sentenceNumber"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/sentenceNumber"
+        android:layout_centerInParent="true"
         android:layout_gravity="center_horizontal|top"
         android:layout_marginBottom="9dp"
         android:gravity="center"
@@ -30,13 +31,13 @@
         android:text="@string/content"
         android:textColor="#FFFFFF"
         android:textSize="30sp"
-        android:textStyle="bold"
-        android:layout_centerInParent="true"/>
+        android:textStyle="bold" />
+
     <TextView
         android:id="@+id/sentence"
-        android:layout_below="@+id/imageSentence"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@+id/imageSentence"
         android:layout_gravity="center_horizontal|top"
         android:layout_marginBottom="90dp"
         android:background="#0099cc"
@@ -50,69 +51,58 @@
     <FrameLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:fitsSystemWindows="true" >
+        android:fitsSystemWindows="true">
 
         <LinearLayout
             android:id="@+id/fullscreen_content_bar"
-            style="?buttonBarStyle"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
             android:orientation="vertical"
-            tools:ignore="UselessParent" >
-
+            tools:ignore="UselessParent">
 
 
             <LinearLayout
-                style="?buttonBarStyle"
                 android:layout_width="150dp"
                 android:layout_height="50dp"
                 android:layout_gravity="bottom|center_horizontal"
                 android:orientation="horizontal"
-                tools:ignore="UselessParent" >
-
-
+                tools:ignore="UselessParent">
 
                 <ImageButton
                     android:id="@+id/play_button"
-                    style="?buttonBarButtonStyle"
-                    android:layout_weight="1"
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:layout_marginRight="30dp"
+                    android:layout_weight="1"
                     android:background="@drawable/playbutton"
                     android:text="@string/play" />
 
-
-
                 <ImageButton
                     android:id="@+id/rec_button"
-                    style="?buttonBarButtonStyle"
-                    android:layout_weight="1"
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:layout_marginLeft="30dp"
+                    android:layout_weight="1"
                     android:background="@drawable/recbutton"
                     android:text="@string/record" />
-
-
             </LinearLayout>
             <LinearLayout
                 android:id="@+id/fullscreen_content_controls"
                 android:layout_width="match_parent"
                 android:layout_height="35dp"
                 android:layout_gravity="bottom|center_horizontal"
-                android:orientation="horizontal" >
+                android:orientation="horizontal">
 
                 <ProgressBar
                     android:id="@+id/progressBar1"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="210dp"
                     android:layout_height="20dp"
+                    android:layout_gravity="center"
                     android:layout_margin="5dp"
                     android:layout_marginRight="10dp"
-                    android:layout_weight="0.53"
-                    android:layout_gravity="center" />
+                    android:layout_weight="0.53" />
 
                 <TextView
                     android:id="@+id/progress"
@@ -120,9 +110,8 @@
                     android:layout_height="30dp"
                     android:gravity="center"
                     android:text=""
-                    android:textSize="15sp"/>
+                    android:textSize="15sp" />
             </LinearLayout>
         </LinearLayout>
     </FrameLayout>
-
 </RelativeLayout>

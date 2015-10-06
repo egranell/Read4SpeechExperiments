@@ -291,10 +291,6 @@ public class MainActivity extends ActionBarActivity {
 
     void init() {
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        if (!new File(settings.getString("mandatoryFile", "NULL")).exists())
-            Toast.makeText(getApplicationContext(), R.string.senteceFileNeeded, Toast.LENGTH_LONG).show();
-        if (settings.getString("name", "").matches(""))
-            Toast.makeText(getApplicationContext(), R.string.setSpeakerID, Toast.LENGTH_LONG).show();
         rootDir = new File(Environment.getExternalStorageDirectory().getPath() + "/Read4SpeechExperiments/" +
                 settings.getString("audioPath", ""));
         name = settings.getString("name", "");
@@ -446,7 +442,7 @@ public class MainActivity extends ActionBarActivity {
         if (getPercentDone() > 0) {
             cleanDialog.show();
         } else {
-            Toast.makeText(getApplicationContext(), "There are not records to delete.", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), R.string.noRecordToDelete, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -492,11 +488,14 @@ public class MainActivity extends ActionBarActivity {
         switch (requestCode) {
             case RESULT_SETTINGS:
                 SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-                if (settings.getString("name", null) == null) {
+                if (settings.getString("name", null) == null || settings.getString("name", "").matches("")) {
                     Toast.makeText(getApplicationContext(), R.string.setSpeakerID, Toast.LENGTH_LONG).show();
-                    Intent i = new Intent(this, settings.class);
-                    startActivityForResult(i, RESULT_SETTINGS);
+                    //Intent i = new Intent(this, settings.class);
+                    //startActivityForResult(i, RESULT_SETTINGS);
                 }
+
+               // if (!new File(settings.getString("mandatoryFile", "NULL")).exists())
+             //       Toast.makeText(getApplicationContext(), R.string.senteceFileNeeded, Toast.LENGTH_LONG).show();
 
                 File file = new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt");
                 if (file.exists()) {
@@ -574,6 +573,8 @@ public class MainActivity extends ActionBarActivity {
         @SuppressLint({"NewApi", "InlinedApi"})
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
             RelativeLayout layout = (RelativeLayout) rootView.findViewById(R.id.fragmentLayout);
             layout.setOnTouchListener(new View.OnTouchListener() {
@@ -613,10 +614,10 @@ public class MainActivity extends ActionBarActivity {
                 }
             });
 
-            if (settings.getBoolean("images", false)) {
+            /*if (settings.getBoolean("images", false)) {
                 String mDrawableName = "line_" + getArguments().getInt(ARG_SENTENCE_NUMBER);
                 imageSentence.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(mDrawableName, "drawable", context.getPackageName())));
-            }
+            }*/
 
             final AlertDialog.Builder recDialog = new AlertDialog.Builder(getActivity());
             recDialog.setTitle(R.string.recordTitle);
@@ -787,6 +788,16 @@ public class MainActivity extends ActionBarActivity {
             super.onViewCreated(view, savedInstanceState);
         }
 
+        @Override
+        public void setUserVisibleHint(boolean isVisibleToUser) {
+            super.setUserVisibleHint(isVisibleToUser);
+            if (isVisibleToUser) {
+                // load data here
+            }else{
+                // fragment is no longer visible
+            }
+        }
+
         public void updateContent() {
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
 
@@ -802,10 +813,10 @@ public class MainActivity extends ActionBarActivity {
             }
             sentence.setText(getArguments().getString(ARG_SENTENCE));
             imageSentence.setImageDrawable(null);
-            if (settings.getBoolean("images", false)) {
+            /*if (settings.getBoolean("images", false)) {
                 String mDrawableName = "line_" + getArguments().getInt(ARG_SENTENCE_NUMBER);
                 imageSentence.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(mDrawableName, "drawable", context.getPackageName())));
-            }
+            }*/
             progressBar.setProgress((int) getPercentDone());
             progress.setText(String.format("%s%%", String.format("%.2f", getPercentDone())));
             sentenceNumber.setText(String.format("%s %s/%d", getResources().getString(R.string.sentence), Integer.toString(getArguments().getInt(ARG_SENTENCE_NUMBER)), sentences.size()));
