@@ -183,7 +183,7 @@ public class MainActivity extends ActionBarActivity {
                 SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
                 SharedPreferences.Editor editor = settings.edit();
                 editor.putString("name", "");
-                editor.apply();
+                editor.commit();
 
                 if (rootDir.exists()) {
                     for (File f : rootDir.listFiles()) {
@@ -291,11 +291,12 @@ public class MainActivity extends ActionBarActivity {
 
     void init() {
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        rootDir = new File(Environment.getExternalStorageDirectory().getPath() + "/Read4SpeechExperiments/" +
-                settings.getString("audioPath", ""));
+        rootDir = new File(Environment.getExternalStorageDirectory().getPath() + "/Read4SpeechExperiments/");
+               //+ settings.getString("audioPath", ""));
         name = settings.getString("name", "");
         ID = Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID);
         loadLines(settings.getString("mandatoryFile", ""), settings.getString("optionalFile", ""), Integer.valueOf(settings.getString("OptionalFileNumber", "0")));
+
         //Check if there is enough space on the SD (about 300KB per phrase)
         Long spaceAvailable = getAvailableSpaceInKB();
         Long spaceNecessary = (long) sentences.size() * 300;
@@ -303,13 +304,14 @@ public class MainActivity extends ActionBarActivity {
             notSpaceDialog.setMessage(R.string.spaceNecessary1 + String.valueOf(spaceNecessary / 1024 + 1) + R.string.spaceNecessary2);
             notSpaceDialog.show();
         }
-        if (!rootDir.exists()) {
-            if (!rootDir.mkdirs()) {
+        
+        if (!rootDir.exists())
+            if (!rootDir.mkdirs())
                 Log.e(tag, "Cannot create directory: " + rootDir);
-            }
-        }
-        if (new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt").exists())
-            writeToFile(fileNames, sentences);
+
+        if (!new File(String.format("%s/%s_transcripts_%s.txt", rootDir, name, ID)).exists())
+            if(!writeToFile(fileNames, sentences))
+                Log.e(tag, String.format("Cannot create the file of transcription: %s%s_transcripts_%s.txt", rootDir, name, ID));
     }
 
     protected void loadLines(String mandatoryFile, String optionalFile, int optionalSentences) {
@@ -384,24 +386,27 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    private void writeToFile(ArrayList<String> fileName, ArrayList<String> line) {
+    private boolean writeToFile(ArrayList<String> fileName, ArrayList<String> line) {
         try {
-            File file = new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt");
+            File file = new File(String.format("%s/%s_transcripts_%s.txt", rootDir, name, ID));
             FileOutputStream fos = new FileOutputStream(file);
             PrintStream ps = new PrintStream(fos);
             // if file doesn't exists, then create it
             if (!file.exists()) {
                 if (!file.createNewFile()) {
                     Log.e(tag, "Cannot create file: " + file);
+                    return false;
                 }
             }
             for (int i = 0; i < line.size(); i++) {
                 ps.println(fileName.get(i) + " " + line.get(i));
             }
             ps.close();
+            return true;
 
         } catch (IOException e) {
             Log.e(tag, "File write failed: " + e.toString());
+            return false;
         }
     }
 
@@ -497,12 +502,12 @@ public class MainActivity extends ActionBarActivity {
                // if (!new File(settings.getString("mandatoryFile", "NULL")).exists())
              //       Toast.makeText(getApplicationContext(), R.string.senteceFileNeeded, Toast.LENGTH_LONG).show();
 
-                File file = new File(rootDir + "/" + name + "_transcripts_" + ID + ".txt");
+                /*File file = new File(String.format("%s/%s_transcripts_%s.txt", rootDir, name, ID));
                 if (file.exists()) {
                     if (!file.delete()) {
                         Log.e(tag, "Cannot delete file: " + file);
                     }
-                }
+                }*/
 
                 init();
 

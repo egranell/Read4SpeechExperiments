@@ -16,8 +16,12 @@
         <EditTextPreference
             android:id="@+id/name"
             android:key="name"
+            android:singleLine="true"
             android:summary="@string/speakerIDSummary"
-            android:title="@string/speakerIDTitle"/>
+            android:title="@string/speakerIDTitle"
+            android:digits="0,1,2,3,4,5,6,7,8,9,qwertyuiopasdfghjklñçzxcvbnm,_,-"
+            android:hint="@string/speakerIDHint"
+            android:maxLength="20"/>
 
   <!---        <CheckBoxPreference
               android:defaultValue="false"
