@@ -15,25 +15,25 @@
 
         <EditTextPreference
             android:id="@+id/name"
+            android:digits="0,1,2,3,4,5,6,7,8,9,qwertyuiopasdfghjklñçzxcvbnmQWERTYUIOPASDFGHJKLÑÇZXCVBNMÁÉÍÓÚáéíóú"
+            android:hint="@string/speakerIDHint"
             android:key="name"
+            android:maxLength="20"
             android:singleLine="true"
             android:summary="@string/speakerIDSummary"
             android:title="@string/speakerIDTitle"
-            android:maxLength="20"
-            android:digits="0,1,2,3,4,5,6,7,8,9,qwertyuiopasdfghjklñçzxcvbnmQWERTYUIOPASDFGHJKLÑÇZXCVBNMÁÉÍÓÚáéíóú"
-            android:hint="@string/speakerIDHint"
             />
 
-  <!---        <CheckBoxPreference
+    <CheckBoxPreference
               android:defaultValue="false"
               android:key="images"
               android:summary="@string/imagesSummary"
               android:title="@string/imagesTitle"/>
-       <CheckBoxPreference
-          android:defaultValue="false"
-          android:key="handsFree"
-          android:summary="Permits to acquire the audio without user interaction"
-          android:title="Hands free" /> -->
+    <!---      <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="handsFree"
+            android:summary="Permits to acquire the audio without user interaction"
+            android:title="Hands free" /> -->
     <!--- </PreferenceCategory> -->
 
 <!---<PreferenceCategory android:title="Experiments state">

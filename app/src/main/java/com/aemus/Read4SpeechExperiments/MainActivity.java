@@ -1,10 +1,37 @@
+/*
+ *   Copyright 2016, egranell
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ *
+ *      Read 4 Speech Experiments
+ *
+ *      Created on: 01/01/2015
+ *      Author: egranell
+ */
+
+
 package com.aemus.Read4SpeechExperiments;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Application;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -74,6 +101,7 @@ public class MainActivity extends ActionBarActivity {
     private static int playerChannels = AudioFormat.CHANNEL_OUT_MONO;
     private static AudioRecord recorder;
     private static AudioTrack player;
+    private static AudioManager am;
     private static TextToSpeech tts;
 
     private static Boolean record = false;
@@ -103,6 +131,31 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public static void startRecording(final int position) {
+        am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        context.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int state = intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_STATE, -1);
+                Log.d(tag, "Audio SCO state: " + state);
+                if (AudioManager.SCO_AUDIO_STATE_CONNECTED == state) {
+        /*
+         * Now the connection has been established to the bluetooth device.
+         * Record audio or whatever (on another thread).With AudioRecord you can          record   with an object created like this:
+         * new AudioRecord(MediaRecorder.AudioSource.MIC, 8000, AudioFormat.CHANNEL_CONFIGURATION_MONO,
+         * AudioFormat.ENCODING_PCM_16BIT, audioBufferSize);
+         *
+         * After finishing, don't forget to unregister this receiver and
+         * to stop the bluetooth connection with am.stopBluetoothSco();
+         */
+                    context.unregisterReceiver(this);
+                }
+
+            }
+        }, new IntentFilter(AudioManager.ACTION_SCO_AUDIO_STATE_CHANGED));
+
+        Log.d(tag, "starting bluetooth");
+        am.startBluetoothSco();
+
         Thread streamThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -141,6 +194,7 @@ public class MainActivity extends ActionBarActivity {
         // this.requestWindowFeature(Window.FEATURE_NO_TITLE); // Si quito la barra no se muestra el menú
         setContentView(R.layout.activity_main);
         context = getApplicationContext();
+
 
         tts = new TextToSpeech(context, new TextToSpeech.OnInitListener() {
             @Override
@@ -306,10 +360,14 @@ public class MainActivity extends ActionBarActivity {
             notSpaceDialog.show();
         }
 
-        if (!rootDir.exists())
+        if (!rootDir.exists()) {
             if (!rootDir.mkdirs())
                 Log.e(tag, "Cannot create directory: " + rootDir);
-
+        }
+        /*Comprobar si es un directoio
+        else{
+            rootDir.isDirectory()
+        }*/
         if (!new File(String.format("%s/%s_transcripts_%s.txt", rootDir, name, ID)).exists())
             if(!writeToFile(fileNames, sentences))
                 Log.e(tag, String.format("Cannot create the file of transcription: %s/%s_transcripts_%s.txt", rootDir, name, ID));
@@ -620,10 +678,10 @@ public class MainActivity extends ActionBarActivity {
                 }
             });
 
-            /*if (settings.getBoolean("images", false)) {
+            if (settings.getBoolean("images", false)) {
                 String mDrawableName = "line_" + getArguments().getInt(ARG_SENTENCE_NUMBER);
                 imageSentence.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(mDrawableName, "drawable", context.getPackageName())));
-            }*/
+            }
 
             final AlertDialog.Builder recDialog = new AlertDialog.Builder(getActivity());
             recDialog.setTitle(R.string.recordTitle);
@@ -659,6 +717,7 @@ public class MainActivity extends ActionBarActivity {
                             if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
                                 recorder.stop();
                                 recorder.release();
+                                am.stopBluetoothSco();
                             }
                         }
                         if (new File(String.format("%s/%s.raw", rootDir, fileNames.get(getArguments().getInt(ARG_SENTENCE_NUMBER) - 1))).exists()) {
@@ -820,10 +879,10 @@ public class MainActivity extends ActionBarActivity {
             }
             sentence.setText(getArguments().getString(ARG_SENTENCE));
             imageSentence.setImageDrawable(null);
-            /*if (settings.getBoolean("images", false)) {
+            if (settings.getBoolean("images", false)) {
                 String mDrawableName = "line_" + getArguments().getInt(ARG_SENTENCE_NUMBER);
                 imageSentence.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(mDrawableName, "drawable", context.getPackageName())));
-            }*/
+            }
             progressBar.setProgress((int) getPercentDone());
             progress.setText(String.format("%s%%", String.format("%.2f", getPercentDone())));
             sentenceNumber.setText(String.format("%s %s/%d", getResources().getString(R.string.sentence), Integer.toString(getArguments().getInt(ARG_SENTENCE_NUMBER)), sentences.size()));
